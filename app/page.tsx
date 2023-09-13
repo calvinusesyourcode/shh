@@ -11,11 +11,12 @@ import { collection, doc, setDoc, onSnapshot, query, where, getDoc, updateDoc, a
 
 
 export default function IndexPage() {
-  let pc = new RTCPeerConnection(servers);
+  let pc: any = null;
   
   let localStream: any = null;
   let remoteStream: any = null;
   const startWebcam = async () => {
+    pc = new RTCPeerConnection(servers);
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
     remoteStream = new MediaStream();
     
@@ -43,7 +44,7 @@ export default function IndexPage() {
     const answerCandidates = collection(doc(callDoc), 'answerCandidates');
     
     
-    pc.onicecandidate = async (event) => {
+    pc.onicecandidate = async (event: any) => {
       if (event.candidate) {
         let data = event.candidate.toJSON()
         await setDoc(doc(offerCandidates), {data})
@@ -87,7 +88,7 @@ export default function IndexPage() {
     const answerCandidates = collection(callDoc, 'answerCandidates');
     const offerCandidates = collection(callDoc, 'offerCandidates');
 
-    pc.onicecandidate = async (event) => {
+    pc.onicecandidate = async (event: any) => {
       if (event.candidate) {
         const data = event.candidate.toJSON();
         await setDoc(doc(answerCandidates), {data})
