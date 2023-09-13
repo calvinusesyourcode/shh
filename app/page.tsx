@@ -19,6 +19,9 @@ export default function IndexPage() {
     pc = new RTCPeerConnection(servers);
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
     remoteStream = new MediaStream();
+    remoteStream.onaddtrack = () => {
+      console.log("TRACK ADDED");
+    }
     
     localStream.getTracks().forEach((track: any) => {
       pc.addTrack(track, localStream);
@@ -26,13 +29,17 @@ export default function IndexPage() {
 
     pc.ontrack = (e: any) => {
       e.streams[0].getTracks().forEach((track: any) => {
-        remoteStream.addTrack(track, remoteStream);
+        console.log("TRYING TO DISPLAY REMOTE STREAM");
+        console.log(track);
+        const hello = remoteStream.addTrack(track);
+        console.log(hello)
       });
     }
     const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
-    const theirWebcam: HTMLVideoElement = document.getElementById("their-webcam") as HTMLVideoElement;
+    
 
     console.log(localStream);
+    console.log(remoteStream);
     myWebcam.srcObject = localStream;
     myWebcam.play().catch(error => {
       console.error(error)
@@ -122,6 +129,22 @@ export default function IndexPage() {
     })
   }
 
+  const showVideo = async () => {
+    console.log("PROVING TRACKS ARE AVAILABLE");
+    console.log(remoteStream.getTracks());
+    console.log(remoteStream);
+    const theirWebcam: HTMLVideoElement = document.getElementById("their-webcam") as HTMLVideoElement;
+    theirWebcam.srcObject = remoteStream;
+    
+    theirWebcam.play().catch(error => {
+      console.error(error)
+    });
+  }
+  const getInfoPls = async () => {
+    const theirWebcam: HTMLVideoElement = document.getElementById("their-webcam") as HTMLVideoElement;
+    console.log(theirWebcam.srcObject);
+  }
+
   const deleteAllCalls = async () => {
     const callsCollection = collection(db, 'calls');
     const q = query(callsCollection);
@@ -134,15 +157,17 @@ export default function IndexPage() {
 
   return (
     <section className="container grid items-center gap-6 pb-8 pt-6 md:py-10">
-      <p>small fix for actually real</p>
+      <p>new tests</p>
       <Button onClick={() => {startWebcam()}}>start webcam</Button>
       <Button onClick={() => {startCall()}}>start call</Button>
       <input id="callInputField" />
       <Button onClick={() => {answerCall()}}>answer call</Button>
-      <Button onClick={() => {deleteAllCalls()}}>delete calls</Button>
-      <video id="my-webcam">
+      <Button onClick={() => {showVideo()}}>show video</Button>
+      <Button variant="destructive" onClick={() => {deleteAllCalls()}}>delete calls</Button>
+      <Button onClick={() => {getInfoPls()}}>get info</Button>
+      <video id="my-webcam" controls>
       </video>
-      <video id="their-webcam">
+      <video id="their-webcam" controls>
       </video>
     </section>
   )
