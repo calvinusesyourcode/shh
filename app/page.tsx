@@ -71,7 +71,7 @@ export default function IndexPage() {
       }
     })
 
-    onSnapshot(query(answerCandidates, where("x", "==", "y")), (snapshot) => {
+    onSnapshot(answerCandidates, (snapshot) => {
       snapshot.docChanges().forEach((change) => {
         if (change.type === 'added') {
           const candidate = new RTCIceCandidate(change.doc.data());
@@ -109,7 +109,7 @@ export default function IndexPage() {
 
     await updateDoc(callDoc, {answer});
 
-    onSnapshot(query(offerCandidates, where("x", "==", "y")), (snapshot) => {
+    onSnapshot(offerCandidates, (snapshot) => {
       snapshot.docChanges().forEach((change) => {
         console.log(change);
         if (change.type === 'added') {
