@@ -51,8 +51,8 @@ export default function IndexPage() {
     pc.onicecandidate = async (event: any) => {
       if (event.candidate) {
         console.log({event_candidate1: event.candidate});
-        let data = {...event.candidate.toJSON(), hello1: "world1"}
-        await setDoc(doc(offerCandidates), {data})
+        // let data = {...event.candidate.toJSON(), hello1: "world1"}
+        await setDoc(doc(offerCandidates), {...event.candidate.toJSON()})
       }
     }
 
@@ -91,8 +91,8 @@ export default function IndexPage() {
     pc.onicecandidate = async (event: any) => {
       if (event.candidate) {
         console.log({event_candidate2: event.candidate})
-        const data = {...event.candidate.toJSON(), hello2: "world2"};
-        await setDoc(doc(answerCandidates), {data})
+        // const data = {...event.candidate.toJSON(), hello2: "world2"};
+        await setDoc(doc(answerCandidates), {...event.candidate.toJSON()})
       }
     }
 
