@@ -134,7 +134,7 @@ export default function IndexPage() {
 
   return (
     <section className="container grid items-center gap-6 pb-8 pt-6 md:py-10">
-      <p>small fix</p>
+      <p>small fix for actually real</p>
       <Button onClick={() => {startWebcam()}}>start webcam</Button>
       <Button onClick={() => {startCall()}}>start call</Button>
       <input id="callInputField" />
