@@ -19,9 +19,6 @@ export default function IndexPage() {
     pc = new RTCPeerConnection(servers);
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
     remoteStream = new MediaStream();
-    remoteStream.onaddtrack = () => {
-      console.log("TRACK ADDED");
-    }
     
     localStream.getTracks().forEach((track: any) => {
       pc.addTrack(track, localStream);
@@ -68,8 +65,9 @@ export default function IndexPage() {
 
     await updateDoc(doc(callDoc, callId), { offer: {sdp: offerDescription.sdp, type: offerDescription.type }})
     
-    onSnapshot(doc(callDoc), (snapshot) => {
+    onSnapshot(doc(callDoc, callId), (snapshot) => {
       const data = snapshot.data();
+      console.log(data);
       if (!pc.currentRemoteDescription && data?.answer) {
         console.log({data_answer1: data.answer});
         const answerDescription = new RTCSessionDescription(data.answer);
@@ -157,7 +155,7 @@ export default function IndexPage() {
 
   return (
     <section className="container grid items-center gap-6 pb-8 pt-6 md:py-10">
-      <p>new tests</p>
+      <p>HOLY SHIT IT WORKS</p>
       <Button onClick={() => {startWebcam()}}>start webcam</Button>
       <Button onClick={() => {startCall()}}>start call</Button>
       <input id="callInputField" />
