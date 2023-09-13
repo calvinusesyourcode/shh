@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { useContext } from "react";
 import { MyContext, servers } from "@/lib/context";
 import { db } from "@/lib/firebase";
-import { collection, doc, setDoc, onSnapshot, query, where, getDoc, updateDoc, addDoc } from "firebase/firestore";
+import { collection, doc, setDoc, onSnapshot, query, where, getDoc, updateDoc, addDoc, getDocs, deleteDoc } from "firebase/firestore";
 
 
 export default function IndexPage() {
@@ -40,13 +40,18 @@ export default function IndexPage() {
   }
   const startCall = async () => {
     const callDoc = collection(db, 'calls');
-    const offerCandidates = collection(doc(callDoc), 'offerCandidates');
-    const answerCandidates = collection(doc(callDoc), 'answerCandidates');
-    
+    const callId = (await addDoc(callDoc, {})).id;
+    const callInputField: HTMLInputElement = document.getElementById("callInputField") as HTMLInputElement;
+    callInputField.value = callId;
+
+    const offerCandidates = collection(doc(callDoc, callId), 'offerCandidates');
+    const answerCandidates = collection(doc(callDoc, callId), 'answerCandidates');
+
     
     pc.onicecandidate = async (event: any) => {
       if (event.candidate) {
-        let data = event.candidate.toJSON()
+        console.log({event_candidate1: event.candidate});
+        let data = {...event.candidate.toJSON(), hello1: "world1"}
         await setDoc(doc(offerCandidates), {data})
       }
     }
@@ -54,18 +59,12 @@ export default function IndexPage() {
     const offerDescription = await pc.createOffer();
     await pc.setLocalDescription(offerDescription);
 
-    const offer = {
-      sdp: offerDescription.sdp,
-      type: offerDescription.type,
-    }
-
-    const newCallDoc = await addDoc(callDoc, { offer })
-    const callInputField: HTMLInputElement = document.getElementById("callInputField") as HTMLInputElement;
-    callInputField.value = newCallDoc.id;
+    await updateDoc(doc(callDoc, callId), { offer: {sdp: offerDescription.sdp, type: offerDescription.type }})
     
     onSnapshot(doc(callDoc), (snapshot) => {
       const data = snapshot.data();
       if (!pc.currentRemoteDescription && data?.answer) {
+        console.log({data_answer1: data.answer});
         const answerDescription = new RTCSessionDescription(data.answer);
         pc.setRemoteDescription(answerDescription);
       }
@@ -74,6 +73,7 @@ export default function IndexPage() {
     onSnapshot(answerCandidates, (snapshot) => {
       snapshot.docChanges().forEach((change) => {
         if (change.type === 'added') {
+          console.log({change_doc_data1: change.doc.data()});
           const candidate = new RTCIceCandidate(change.doc.data());
           pc.addIceCandidate(candidate);
         }
@@ -90,7 +90,8 @@ export default function IndexPage() {
 
     pc.onicecandidate = async (event: any) => {
       if (event.candidate) {
-        const data = event.candidate.toJSON();
+        console.log({event_candidate2: event.candidate})
+        const data = {...event.candidate.toJSON(), hello2: "world2"};
         await setDoc(doc(answerCandidates), {data})
       }
     }
@@ -113,6 +114,7 @@ export default function IndexPage() {
       snapshot.docChanges().forEach((change) => {
         console.log(change);
         if (change.type === 'added') {
+          console.log({change_doc_data_2: change.doc.data()})
           let data = change.doc.data();
           pc.addIceCandidate(new RTCIceCandidate(data));
         }
@@ -120,12 +122,24 @@ export default function IndexPage() {
     })
   }
 
+  const deleteAllCalls = async () => {
+    const callsCollection = collection(db, 'calls');
+    const q = query(callsCollection);
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+      deleteDoc(doc.ref);
+    });
+    
+  }
+
   return (
     <section className="container grid items-center gap-6 pb-8 pt-6 md:py-10">
+      <p>extra console logging</p>
       <Button onClick={() => {startWebcam()}}>start webcam</Button>
       <Button onClick={() => {startCall()}}>start call</Button>
       <input id="callInputField" />
       <Button onClick={() => {answerCall()}}>answer call</Button>
+      <Button onClick={() => {deleteAllCalls()}}>delete calls</Button>
       <video id="my-webcam">
       </video>
       <video id="their-webcam">
