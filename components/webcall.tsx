@@ -317,7 +317,7 @@ export function Webcall() {
       <Button onClick={() => {showVideo()}}>show video</Button>
       <Button onClick={() => {getInfoPls()}}>get info</Button> */}
       <div className="flex flex-row gap-4">
-      <video id="my-webcam" controls muted>
+      <video id="my-webcam" controls>
       </video>
       <video id="their-webcam" controls>
       </video>
