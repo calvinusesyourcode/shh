@@ -235,6 +235,8 @@ export function Webcall() {
   const connectAsHost = async () => {
     //startWebcam
     const response = await fetch("https://piano.metered.live/api/v1/turn/credentials?apiKey="+process.env.TURN_SERVER_API_KEY);
+    console.log(process.env.TURN_SERVER_API_KEY)
+    console.log("API KEY ABOVE")
     const stunAndTurnServers = await response.json();
     const servers = {
       iceServers: stunAndTurnServers,
@@ -321,6 +323,7 @@ export function Webcall() {
 
   return (
     <>
+      <p>v0.001</p>
       <Button onClick={() => {connectAsGuest()}}>connectAsGuest</Button>
       <Button onClick={() => {connectAsHost()}}>connectAsHost</Button>
       {/* <Button onClick={() => {startWebcam()}}>start webcam</Button>
