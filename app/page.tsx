@@ -55,7 +55,6 @@ export default function IndexPage() {
     pc.onicecandidate = async (event: any) => {
       if (event.candidate) {
         console.log({event_candidate1: event.candidate});
-        // let data = {...event.candidate.toJSON(), hello1: "world1"}
         await setDoc(doc(offerCandidates), {...event.candidate.toJSON()})
       }
     }
