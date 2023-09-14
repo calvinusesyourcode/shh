@@ -170,9 +170,9 @@ export function Webcall() {
     // await answerCall()
     let callId;
     (await getDocs(query(collection(db, 'calls'), orderBy("createdAt","desc"), limit(1)))).forEach((doc => {callId = doc.id}))
-    const callInputField: HTMLInputElement = document.getElementById("callInputField") as HTMLInputElement;
+    // const callInputField: HTMLInputElement = document.getElementById("callInputField") as HTMLInputElement;
     // callId = "DVBaSUUxPefEmai9B9Fd"
-    if (callId) {callInputField.value = callId}
+    // if (callId) {callInputField.value = callId}
     if (!callId) {
         console.error("callId not found")
     }
@@ -255,8 +255,8 @@ export function Webcall() {
     //startCall
     const callDoc = collection(db, 'calls');
     const callId = (await addDoc(callDoc, {})).id;
-    const callInputField: HTMLInputElement = document.getElementById("callInputField") as HTMLInputElement;
-    callInputField.value = callId;
+    // const callInputField: HTMLInputElement = document.getElementById("callInputField") as HTMLInputElement;
+    // callInputField.value = callId;
 
     const offerCandidates = collection(doc(callDoc, callId), 'offerCandidates');
     const answerCandidates = collection(doc(callDoc, callId), 'answerCandidates');
