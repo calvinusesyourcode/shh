@@ -310,16 +310,18 @@ export function Webcall() {
     <>
       <Button onClick={() => {connectAsGuest()}}>connectAsGuest</Button>
       <Button onClick={() => {connectAsHost()}}>connectAsHost</Button>
-      <Button onClick={() => {startWebcam()}}>start webcam</Button>
+      {/* <Button onClick={() => {startWebcam()}}>start webcam</Button>
       <Button onClick={() => {startCall()}}>start call</Button>
       <input id="callInputField" />
       <Button onClick={() => {answerCall()}}>answer call</Button>
       <Button onClick={() => {showVideo()}}>show video</Button>
-      <Button onClick={() => {getInfoPls()}}>get info</Button>
+      <Button onClick={() => {getInfoPls()}}>get info</Button> */}
+      <div className="flex flex-row gap-4">
       <video id="my-webcam" controls muted>
       </video>
       <video id="their-webcam" controls>
       </video>
+      </div>
     </>
   )
 }
