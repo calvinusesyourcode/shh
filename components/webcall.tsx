@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button"
 import { db } from "@/lib/firebase";
 import { collection, doc, setDoc, onSnapshot, getDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, limit, getDocs } from "firebase/firestore";
 
-export function Webcall({ servers }: {servers: any }){
+export function Webcall(){
   let pc: any = null;
   
   let localStream: any = null;
   let remoteStream: any = null;
+  
   // const startWebcam = async () => {
   //   pc = new RTCPeerConnection(servers);
   //   localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
@@ -140,6 +141,12 @@ export function Webcall({ servers }: {servers: any }){
 
   const connectAsGuest = async () => {
     // await startWebcam()
+    const response = await fetch("https://piano.metered.live/api/v1/turn/credentials?apiKey="+process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY);
+    const stunAndTurnServers = await response.json();
+    const servers: object = {
+      iceServers: stunAndTurnServers,
+        iceCandidatePoolSize: 10,
+      };  
     pc = new RTCPeerConnection(servers);
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
     remoteStream = new MediaStream();
@@ -225,6 +232,12 @@ export function Webcall({ servers }: {servers: any }){
   }
   const connectAsHost = async () => {
     //startWebcam
+    const response = await fetch("https://piano.metered.live/api/v1/turn/credentials?apiKey="+process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY);
+    const stunAndTurnServers = await response.json();
+    const servers: object = {
+      iceServers: stunAndTurnServers,
+        iceCandidatePoolSize: 10,
+      };  
     pc = new RTCPeerConnection(servers);
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
     remoteStream = new MediaStream();
