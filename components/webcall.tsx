@@ -12,134 +12,134 @@ export function Webcall() {
   
   let localStream: any = null;
   let remoteStream: any = null;
-  const startWebcam = async () => {
-    pc = new RTCPeerConnection(servers);
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
-    remoteStream = new MediaStream();
+  // const startWebcam = async () => {
+  //   pc = new RTCPeerConnection(servers);
+  //   localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
+  //   remoteStream = new MediaStream();
     
-    localStream.getTracks().forEach((track: any) => {
-      pc.addTrack(track, localStream);
-    });
+  //   localStream.getTracks().forEach((track: any) => {
+  //     pc.addTrack(track, localStream);
+  //   });
 
-    pc.ontrack = (e: any) => {
-      e.streams[0].getTracks().forEach((track: any) => {
-        console.log("TRYING TO DISPLAY REMOTE STREAM");
-        console.log(track);
-        const hello = remoteStream.addTrack(track);
-        console.log(hello)
-      });
-    }
-    const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
+  //   pc.ontrack = (e: any) => {
+  //     e.streams[0].getTracks().forEach((track: any) => {
+  //       console.log("TRYING TO DISPLAY REMOTE STREAM");
+  //       console.log(track);
+  //       const hello = remoteStream.addTrack(track);
+  //       console.log(hello)
+  //     });
+  //   }
+  //   const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
     
 
-    console.log(localStream);
-    console.log(remoteStream);
-    myWebcam.srcObject = localStream;
-    myWebcam.play().catch(error => {
-      console.error(error)
-    });
-  }
-  const startCall = async () => {
-    const callDoc = collection(db, 'calls');
-    const callId = (await addDoc(callDoc, {})).id;
-    const callInputField: HTMLInputElement = document.getElementById("callInputField") as HTMLInputElement;
-    callInputField.value = callId;
+  //   console.log(localStream);
+  //   console.log(remoteStream);
+  //   myWebcam.srcObject = localStream;
+  //   myWebcam.play().catch(error => {
+  //     console.error(error)
+  //   });
+  // }
+  // const startCall = async () => {
+  //   const callDoc = collection(db, 'calls');
+  //   const callId = (await addDoc(callDoc, {})).id;
+  //   const callInputField: HTMLInputElement = document.getElementById("callInputField") as HTMLInputElement;
+  //   callInputField.value = callId;
 
-    const offerCandidates = collection(doc(callDoc, callId), 'offerCandidates');
-    const answerCandidates = collection(doc(callDoc, callId), 'answerCandidates');
+  //   const offerCandidates = collection(doc(callDoc, callId), 'offerCandidates');
+  //   const answerCandidates = collection(doc(callDoc, callId), 'answerCandidates');
 
     
-    pc.onicecandidate = async (event: any) => {
-      if (event.candidate) {
-        console.log({event_candidate1: event.candidate});
-        await setDoc(doc(offerCandidates), {...event.candidate.toJSON()})
-      }
-    }
+  //   pc.onicecandidate = async (event: any) => {
+  //     if (event.candidate) {
+  //       console.log({event_candidate1: event.candidate});
+  //       await setDoc(doc(offerCandidates), {...event.candidate.toJSON()})
+  //     }
+  //   }
 
-    const offerDescription = await pc.createOffer();
-    await pc.setLocalDescription(offerDescription);
+  //   const offerDescription = await pc.createOffer();
+  //   await pc.setLocalDescription(offerDescription);
 
-    await updateDoc(doc(callDoc, callId), { offer: {sdp: offerDescription.sdp, type: offerDescription.type }})
+  //   await updateDoc(doc(callDoc, callId), { offer: {sdp: offerDescription.sdp, type: offerDescription.type }})
     
-    onSnapshot(doc(callDoc, callId), (snapshot) => {
-      const data = snapshot.data();
-      console.log(data);
-      if (!pc.currentRemoteDescription && data?.answer) {
-        console.log({data_answer1: data.answer});
-        const answerDescription = new RTCSessionDescription(data.answer);
-        pc.setRemoteDescription(answerDescription);
-      }
-    })
+  //   onSnapshot(doc(callDoc, callId), (snapshot) => {
+  //     const data = snapshot.data();
+  //     console.log(data);
+  //     if (!pc.currentRemoteDescription && data?.answer) {
+  //       console.log({data_answer1: data.answer});
+  //       const answerDescription = new RTCSessionDescription(data.answer);
+  //       pc.setRemoteDescription(answerDescription);
+  //     }
+  //   })
 
-    onSnapshot(answerCandidates, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === 'added') {
-          console.log({change_doc_data1: change.doc.data()});
-          const candidate = new RTCIceCandidate(change.doc.data());
-          pc.addIceCandidate(candidate);
-        }
-      })
-    })
+  //   onSnapshot(answerCandidates, (snapshot) => {
+  //     snapshot.docChanges().forEach((change) => {
+  //       if (change.type === 'added') {
+  //         console.log({change_doc_data1: change.doc.data()});
+  //         const candidate = new RTCIceCandidate(change.doc.data());
+  //         pc.addIceCandidate(candidate);
+  //       }
+  //     })
+  //   })
     
-  }
-  const answerCall = async () => {
-    const callInputField: HTMLInputElement = document.getElementById("callInputField") as HTMLInputElement;
-    const callId = callInputField.value;
-    const callDoc = doc(collection(db, 'calls'), callId);
-    const answerCandidates = collection(callDoc, 'answerCandidates');
-    const offerCandidates = collection(callDoc, 'offerCandidates');
+  // }
+  // const answerCall = async () => {
+  //   const callInputField: HTMLInputElement = document.getElementById("callInputField") as HTMLInputElement;
+  //   const callId = callInputField.value;
+  //   const callDoc = doc(collection(db, 'calls'), callId);
+  //   const answerCandidates = collection(callDoc, 'answerCandidates');
+  //   const offerCandidates = collection(callDoc, 'offerCandidates');
 
-    pc.onicecandidate = async (event: any) => {
-      if (event.candidate) {
-        console.log({event_candidate2: event.candidate})
-        // const data = {...event.candidate.toJSON(), hello2: "world2"};
-        await setDoc(doc(answerCandidates), {...event.candidate.toJSON()})
-      }
-    }
+  //   pc.onicecandidate = async (event: any) => {
+  //     if (event.candidate) {
+  //       console.log({event_candidate2: event.candidate})
+  //       // const data = {...event.candidate.toJSON(), hello2: "world2"};
+  //       await setDoc(doc(answerCandidates), {...event.candidate.toJSON()})
+  //     }
+  //   }
 
-    const callData: any = (await getDoc(callDoc)).data();
-    const offerDescription = callData.offer;
-    await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
+  //   const callData: any = (await getDoc(callDoc)).data();
+  //   const offerDescription = callData.offer;
+  //   await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
 
-    const answerDescription = await pc.createAnswer();
-    await pc.setLocalDescription(answerDescription);
+  //   const answerDescription = await pc.createAnswer();
+  //   await pc.setLocalDescription(answerDescription);
 
-    const answer = {
-      type: answerDescription.type,
-      sdp: answerDescription.sdp,
-    };
+  //   const answer = {
+  //     type: answerDescription.type,
+  //     sdp: answerDescription.sdp,
+  //   };
 
-    await updateDoc(callDoc, {answer});
+  //   await updateDoc(callDoc, {answer});
 
-    onSnapshot(offerCandidates, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        console.log(change);
-        if (change.type === 'added') {
-          console.log({change_doc_data_2: change.doc.data()})
-          let data = change.doc.data();
-          pc.addIceCandidate(new RTCIceCandidate(data));
-        }
-      })
-    })
-  }
+  //   onSnapshot(offerCandidates, (snapshot) => {
+  //     snapshot.docChanges().forEach((change) => {
+  //       console.log(change);
+  //       if (change.type === 'added') {
+  //         console.log({change_doc_data_2: change.doc.data()})
+  //         let data = change.doc.data();
+  //         pc.addIceCandidate(new RTCIceCandidate(data));
+  //       }
+  //     })
+  //   })
+  // }
 
-  const showVideo = async () => {
-    console.log("PROVING TRACKS ARE AVAILABLE");
-    console.log(remoteStream.getTracks());
-    console.log(remoteStream);
-    const theirWebcam: HTMLVideoElement = document.getElementById("their-webcam") as HTMLVideoElement;
-    theirWebcam.srcObject = remoteStream;
+  // const showVideo = async () => {
+  //   console.log("PROVING TRACKS ARE AVAILABLE");
+  //   console.log(remoteStream.getTracks());
+  //   console.log(remoteStream);
+  //   const theirWebcam: HTMLVideoElement = document.getElementById("their-webcam") as HTMLVideoElement;
+  //   theirWebcam.srcObject = remoteStream;
     
-    theirWebcam.play().catch(error => {
-      console.error(error)
-    });
-  }
-  const getInfoPls = async () => {
-    const theirWebcam: HTMLVideoElement = document.getElementById("their-webcam") as HTMLVideoElement;
-    let docId;
-    (await getDocs(query(collection(db, 'calls'), orderBy("createdAt","desc"), limit(1)))).forEach((doc => {docId = doc.id}))
-    console.log(docId);
-    }
+  //   theirWebcam.play().catch(error => {
+  //     console.error(error)
+  //   });
+  // }
+  // const getInfoPls = async () => {
+  //   const theirWebcam: HTMLVideoElement = document.getElementById("their-webcam") as HTMLVideoElement;
+  //   let docId;
+  //   (await getDocs(query(collection(db, 'calls'), orderBy("createdAt","desc"), limit(1)))).forEach((doc => {docId = doc.id}))
+  //   console.log(docId);
+  //   }
 
   const connectAsGuest = async () => {
     // await startWebcam()
