@@ -231,15 +231,16 @@ function SendToHost({ localStream, remoteStream, callId }: { localStream: any; r
             console.log(hello)
           });
         }
-        const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
+        // const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
         
     
-        console.log(localStream);
-        console.log(remoteStream);
-        myWebcam.srcObject = localStream;
-        myWebcam.play().catch(error => {
-          console.error(error)
-        });
+        // console.log(localStream);
+        // console.log(remoteStream);
+        // myWebcam.srcObject = localStream;
+        // myWebcam.play().catch(error => {
+        //   console.error(error)
+        // });
+        
         // await answerCall()
         // let callId;
         // (await getDocs(query(collection(db, 'calls'), orderBy("createdAt","desc"), limit(1)))).forEach((doc => {callId = doc.id}))
@@ -291,12 +292,12 @@ function SendToHost({ localStream, remoteStream, callId }: { localStream: any; r
         console.log("PROVING TRACKS ARE AVAILABLE");
         console.log(remoteStream.getTracks());
         console.log(remoteStream);
-        const theirWebcam: HTMLVideoElement = document.getElementById("their-webcam") as HTMLVideoElement;
-        theirWebcam.srcObject = remoteStream;
+        // const theirWebcam: HTMLVideoElement = document.getElementById("their-webcam") as HTMLVideoElement;
+        // theirWebcam.srcObject = remoteStream;
         
-        theirWebcam.play().catch(error => {
-          console.error(error)
-        });
+        // theirWebcam.play().catch(error => {
+        //   console.error(error)
+        // });
     }
     connectAsGuest()
     return (
