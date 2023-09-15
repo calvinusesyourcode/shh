@@ -12,13 +12,18 @@ export function WebcallAsAdmin() {
   let localStream: any = null;
   let remoteStream: any = null;
 
-  const [callIds, setCallIds] = useState([]);
+  const [callIds, setCallIds] = useState<string[]>([]);
 
   const ref = doc(collection(db, 'calls'), 'newCalls')
   onSnapshot(ref, (snapshot) => {
     const data = snapshot.data()
-    
-  })
+    for (let key in data) {
+      const callId = data[key].callId;
+      if (callId && !callIds.includes(callId)) {
+        setCallIds((prevCallIds) => [...prevCallIds, callId]);
+      }
+    }
+    });
 
   const initMedia = async () => {
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
@@ -245,10 +250,11 @@ function SendToHost({ localStream, callId }: { localStream: MediaStream; callId:
       })
     })
   }
+  console.log("trying to send to host")
   connectAsGuest()
   return (
     <>
-    <Button>o</Button>
+    <Button>{callId}</Button>
     </>
   )
 }
