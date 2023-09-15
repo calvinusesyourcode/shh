@@ -17,7 +17,7 @@ export function WebcallAsAdmin() {
   const ref = doc(collection(db, 'calls'), 'newCalls')
   onSnapshot(ref, (snapshot) => {
     const data = snapshot.data()
-    console.log("snapshot data", data);
+    
   })
 
   const initMedia = async () => {
@@ -280,7 +280,7 @@ export function WebcallAsNoob() {
     //startCall
     const callDoc = collection(db, 'calls');
     const callId = (await addDoc(callDoc, {})).id;
-    await updateDoc(doc(callDoc, "newCalls"), {[callId]: {createdAt:serverTimestamp()}, callId: callId})
+    await updateDoc(doc(callDoc, "newCalls"), {[callId]: {createdAt:serverTimestamp(), callId: callId}})
     // const callInputField: HTMLInputElement = document.getElementById("callInputField") as HTMLInputElement;
     // callInputField.value = callId;
 
