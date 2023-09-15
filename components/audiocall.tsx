@@ -14,7 +14,10 @@ export function WebcallAsAdmin() {
 
   const [callIds, setCallIds] = useState<string[]>([]);
 
-  const ref = doc(collection(db, 'calls'), 'newCalls')
+
+  const initMedia = async () => {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
+    const ref = doc(collection(db, 'calls'), 'newCalls')
   onSnapshot(ref, (snapshot) => {
     const data = snapshot.data()
     for (let key in data) {
@@ -24,9 +27,6 @@ export function WebcallAsAdmin() {
       }
     }
     });
-
-  const initMedia = async () => {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
   }
 
   const connectAsGuest = async () => {
@@ -189,7 +189,7 @@ export function WebcallAsAdmin() {
 
   return (
     <>
-      <Button onClick={() => {initMedia()}}>initMedia</Button>
+      <Button onClick={() => {initMedia()}}>initProcess</Button>
       {callIds.map(callId => (
         <SendToHost key={callId} localStream={localStream} callId={callId} />
       ))}
