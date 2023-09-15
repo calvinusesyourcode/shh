@@ -310,7 +310,7 @@ export function WebcallAsNoob() {
     onSnapshot(doc(callDoc, callId), (snapshot) => {
       const data = snapshot.data();
       console.log(data);
-      if (!pc.currentRemoteDescription && data?.answer) {
+      if (pc.currentLocalDescription && !pc.currentRemoteDescription && data?.answer) {
         console.log({data_answer1: data.answer});
         const answerDescription = new RTCSessionDescription(data.answer);
         pc.setRemoteDescription(answerDescription);
