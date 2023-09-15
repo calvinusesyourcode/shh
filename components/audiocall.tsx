@@ -336,6 +336,9 @@ export function WebcallAsNoob() {
     theirWebcam.play().catch(error => {
       console.error(error)
     });
+    setInterval(() => {
+      console.log("remoteStream.getTracks()",remoteStream.getTracks())
+    },10000)
 
   }
 
