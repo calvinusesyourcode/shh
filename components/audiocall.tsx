@@ -190,7 +190,7 @@ export function WebcallAsAdmin() {
   return (
     <>
       <Button onClick={() => {initMedia()}}>initProcess</Button>
-      {callIds.map(callId => (
+      {localStream && callIds.map(callId => (
         <SendToHost key={callId} localStream={localStream} callId={callId} />
       ))}
     </>
