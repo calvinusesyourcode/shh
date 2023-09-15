@@ -303,7 +303,7 @@ export function WebcallAsNoob() {
       }
     }
 
-    const offerDescription = await pc.createOffer();
+    const offerDescription = await pc.createOffer()
     await pc.setLocalDescription(offerDescription);
 
     await updateDoc(doc(callDoc, callId), { createdAt: serverTimestamp(), offer: {sdp: offerDescription.sdp, type: offerDescription.type }})
