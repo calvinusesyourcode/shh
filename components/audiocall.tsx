@@ -27,6 +27,7 @@ export function WebcallAsAdmin() {
       }
     }
     });
+    return localStream
   }
 
   // const connectAsGuest = async () => {
@@ -189,7 +190,7 @@ export function WebcallAsAdmin() {
 
   return (
     <>
-      <Button onClick={() => {initMedia()}}>initProcess</Button>
+      <Button onClick={() => {localStream = initMedia()}}>initProcess</Button>
       {localStream && callIds.map(callId => (
         <SendToHost key={callId} localStream={localStream} callId={callId} />
       ))}
