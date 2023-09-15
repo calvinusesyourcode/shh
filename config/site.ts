@@ -1,9 +1,9 @@
 export type SiteConfig = typeof siteConfig
 
 export const siteConfig = {
-  name: "webRTC demo",
+  name: "live",
   description:
-    "1-to-1 video call (on same network only)",
+    "streaming something uhh",
   mainNav: [
     {
       title: "Home",
@@ -11,7 +11,7 @@ export const siteConfig = {
     },
   ],
   links: {
-    twitter: "https://calvin.art",
+    twitter: "https://instagram.com/calvinducharme",
     github: "https://github.com/calvinusesyourcode",
   },
 }
