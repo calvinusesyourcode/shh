@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { AppContext } from "@/lib/context";
 import { db } from "@/lib/firebase";
-import { collection, doc, setDoc, onSnapshot, getDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, limit, getDocs } from "firebase/firestore";
+import { collection, doc, setDoc, onSnapshot, getDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, limit, getDocs, Timestamp } from "firebase/firestore";
 import { useContext, useEffect, useState } from "react";
 
 export function WebcallOld(){
@@ -438,10 +438,13 @@ export function WebcallAsAdmin() {
     },[])
 
     const ref = doc(collection(db, 'calls'), 'newCalls')
+
     onSnapshot(ref, (snapshot) => {
       const data = snapshot.data()
       for (let key in data) {
         const callId = data[key].callId;
+        const lastSeen = data[key].lastSeen;
+        console.log("lastSeen", typeof lastSeen, lastSeen)
         if (callId && !callIds.includes(callId)) {
           setCallIds((prevCallIds) => [...prevCallIds, callId]);
         }
