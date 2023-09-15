@@ -325,12 +325,12 @@ function SendToGuest() {
             iceCandidatePoolSize: 10,
           };  
         pc = new RTCPeerConnection(servers);
-        // localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
         remoteStream = new MediaStream();
         
-        // localStream.getTracks().forEach((track: any) => {
-        //   pc.addTrack(track, localStream);
-        // });
+        localStream.getTracks().forEach((track: any) => {
+          pc.addTrack(track, localStream);
+        });
     
         pc.ontrack = (e: any) => {
           e.streams[0].getTracks().forEach((track: any) => {
@@ -341,17 +341,15 @@ function SendToGuest() {
           });
         }
 
-        // const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
+        const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
         
     
-        // console.log(localStream);
-        // console.log(remoteStream);
-        // myWebcam.srcObject = localStream;
-        // myWebcam.play().catch(error => {
-        //   console.error(error)
-        // });
-
-
+        console.log(localStream);
+        console.log(remoteStream);
+        myWebcam.srcObject = localStream;
+        myWebcam.play().catch(error => {
+          console.error(error)
+        });
         //startCall
         const callDoc = collection(db, 'calls');
         const callId = (await addDoc(callDoc, {})).id;
@@ -415,6 +413,8 @@ function SendToGuest() {
           <p>v0.0000001</p>
           <Button onClick={() => {connectAsHost()}}>connectAsHost</Button>
           <div className="flex flex-row gap-4">
+          <video id="my-webcam" controls>
+          </video>
           <video id="their-webcam" controls>
           </video>
           </div>
