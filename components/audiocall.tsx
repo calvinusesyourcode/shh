@@ -9,13 +9,14 @@ import { useContext, useState } from "react";
 export function WebcallAsAdmin() {
   let pc: any = null;
   
-  let localStream: any = null;
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null)
   let remoteStream: any = null;
 
   const [callIds, setCallIds] = useState<string[]>([]);
 
   const initMedia = async () => {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
+    const localStreamObject = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
+    setLocalStream(localStreamObject)
     console.log("init media local stream", localStream)
     const ref = doc(collection(db, 'calls'), 'newCalls')
   onSnapshot(ref, (snapshot) => {
@@ -27,7 +28,6 @@ export function WebcallAsAdmin() {
       }
     }
     });
-    return localStream
   }
 
   // const connectAsGuest = async () => {
@@ -190,7 +190,7 @@ export function WebcallAsAdmin() {
 
   return (
     <>
-      <Button onClick={() => {localStream = initMedia()}}>initProcess</Button>
+      <Button onClick={() => {initMedia()}}>initProcess</Button>
       {localStream && callIds.map(callId => (
         <SendToHost key={callId} localStream={localStream} callId={callId} />
       ))}
