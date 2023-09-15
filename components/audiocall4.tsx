@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { AppContext } from "@/lib/context";
 import { db } from "@/lib/firebase";
 import { collection, doc, setDoc, onSnapshot, getDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, limit, getDocs } from "firebase/firestore";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 export function WebcallOld(){
   let pc: any = null;
@@ -240,7 +240,7 @@ function SendToHost({ localStream, remoteStream, callId }: { localStream: any; r
         // myWebcam.play().catch(error => {
         //   console.error(error)
         // });
-        
+
         // await answerCall()
         // let callId;
         // (await getDocs(query(collection(db, 'calls'), orderBy("createdAt","desc"), limit(1)))).forEach((doc => {callId = doc.id}))
@@ -427,7 +427,9 @@ export function WebcallAsAdmin() {
         (await getDocs(query(collection(db, 'calls'), orderBy("createdAt","desc"), limit(3)))).forEach((doc => {newCallIds.push(doc.id)}))
         setCallIds(newCallIds)
     }
-    getCallId()
+    useEffect(() => {
+        getCallId()
+    },[])
 
     const initMedia = async () => {
         const localStreamObject = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
