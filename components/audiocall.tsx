@@ -264,6 +264,7 @@ function SendToHost({ localStream, callId }: { localStream: MediaStream; callId:
 export function WebcallAsNoob() {
   let pc: any = null
   let remoteStream: any = null
+  let callId: any = null;
 
   const connectAsHost = async () => {
     //startWebcam
@@ -287,7 +288,7 @@ export function WebcallAsNoob() {
 
     //startCall
     const callDoc = collection(db, 'calls');
-    const callId = (await addDoc(callDoc, {})).id;
+    callId = (await addDoc(callDoc, {})).id;
     await updateDoc(doc(callDoc, "newCalls"), {[callId]: {createdAt:serverTimestamp(), callId: callId}})
     // const callInputField: HTMLInputElement = document.getElementById("callInputField") as HTMLInputElement;
     // callInputField.value = callId;
@@ -344,7 +345,7 @@ export function WebcallAsNoob() {
 
   return (
     <>
-    <Button onClick={() => {connectAsHost()}}>connect!</Button>
+    <Button onClick={() => {connectAsHost()}}>{callId || "connect!"}</Button>
     <video id="video-player"></video>
     </>
   )
