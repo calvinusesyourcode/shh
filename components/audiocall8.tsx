@@ -239,7 +239,7 @@ function StreamFromBroadcaster() {
         //startCall
         const callDoc = collection(db, 'calls');
         const callId = (await addDoc(callDoc, {})).id;
-        await updateDoc(doc(callDoc, "newCalls"), {[callId]: {createdAt:serverTimestamp(), callId: callId}})
+        // await updateDoc(doc(callDoc, "newCalls"), {[callId]: {createdAt:serverTimestamp(), callId: callId}})
         // const callInputField: HTMLInputElement = document.getElementById("callInputField") as HTMLInputElement;
         // callInputField.value = callId;
     
@@ -343,11 +343,10 @@ export function Broadcast() {
           setCallIds(oldCallIds => {
             let newCallIds = [...(oldCallIds || [])];
             snapshot.docChanges().forEach((change) => {
-              console.log("change")
               const id = change.doc.id
               if (id) {
                 if (change.type === "added") {
-                  if (!newCallIds.includes(id)) {
+                  if (!newCallIds.includes(id) && change.doc.data().lastSeen) {
                     newCallIds.push(id);
                   }
                 }
@@ -368,6 +367,7 @@ export function Broadcast() {
         return () => unsubscribe();  // Clean up subscription
     
       }, []);
+
 
     const initMedia = async () => {
         const localStreamObject = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
