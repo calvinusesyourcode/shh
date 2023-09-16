@@ -1,6 +1,6 @@
 'use client';
 
-import { Webcall } from "@/components/audiocall6";
+import { Webcall } from "@/components/audiocall7";
 import { AppContext } from "@/lib/context";
 import { useUserData } from "@/lib/hooks";
 import { GetServerSideProps } from "next";

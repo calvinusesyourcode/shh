@@ -5,6 +5,17 @@ import { AppContext } from "@/lib/context";
 import { db } from "@/lib/firebase";
 import { collection, doc, setDoc, onSnapshot, getDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, limit, getDocs, Timestamp, deleteDoc } from "firebase/firestore";
 import { useContext, useEffect, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 
 function StreamToAudience({ localStream, callOptions, callId }: { localStream: any; callOptions: any; callId: string }) {
@@ -220,6 +231,15 @@ export function Broadcast() {
     const [info, setInfo] = useState<string>("info")
     const [callOptions, setCallOptions] = useState<object>({})
 
+    useEffect(() => {
+      setCallOptions({
+        broadcastVideo: true,
+        broadcastAudio: true,
+        audienceVideo: false,
+        audienceAudio: false,
+      })
+    })
+
     // const getCallId = async () => {
     //     const newCallIds: string[] = [];
     //     (await getDocs(query(collection(db, 'calls'), orderBy("createdAt","desc"), limit(3)))).forEach((doc => {newCallIds.push(doc.id)}))
@@ -276,6 +296,36 @@ export function Broadcast() {
 
     return (
         <>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline">Broadcast Settings</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit profile</DialogTitle>
+              <DialogDescription>
+                Make changes to your profile here. Click save when you're done.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Name
+                </Label>
+                <Input id="name" value="Pedro Duarte" className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="username" className="text-right">
+                  Username
+                </Label>
+                <Input id="username" value="@peduarte" className="col-span-3" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit">Save changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         <Button onClick={() => {initMedia()}}>initProcess</Button>
         <p className='text-sm'>{info}</p>
         {callIds.map(callId => (
