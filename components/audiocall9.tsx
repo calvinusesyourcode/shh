@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { AppContext } from "@/lib/context";
 import { db } from "@/lib/firebase";
-import { collection, doc, setDoc, onSnapshot, getDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, limit, getDocs, Timestamp } from "firebase/firestore";
+import { collection, doc, setDoc, onSnapshot, getDoc, updateDoc, where, addDoc, serverTimestamp, query, orderBy, limit, getDocs, Timestamp } from "firebase/firestore";
 import { useContext, useEffect, useState } from "react";
 
 
@@ -214,29 +214,42 @@ function SendToGuest() {
 export function WebcallAsAdmin() {
     const [localStream, setLocalStream] = useState<MediaStream | null>(null)
     const [callIds, setCallIds] = useState<string[]>([])
+    const lastSeenAllowance = 5 * 60 * 1000
 
-    const getCallId = async () => {
-        const newCallIds: string[] = [];
-        (await getDocs(query(collection(db, 'calls'), orderBy("createdAt","desc"), limit(3)))).forEach((doc => {newCallIds.push(doc.id)}))
-        setCallIds(newCallIds)
-    }
     useEffect(() => {
-        getCallId()
-    },[])
-
-    const ref = doc(collection(db, 'calls'), 'newCalls')
-
-    onSnapshot(ref, (snapshot) => {
-      const data = snapshot.data()
-      for (let key in data) {
-        const callId = data[key].callId;
-        const lastSeen = data[key].lastSeen;
-        console.log("lastSeen", typeof lastSeen, lastSeen)
-        if (callId && !callIds.includes(callId)) {
-          setCallIds((prevCallIds) => [...prevCallIds, callId]);
-        }
-      }
-    });
+        const unsubscribe = onSnapshot(
+            query(collection(db, 'calls'),
+            where("lastSeen", ">=", Timestamp.fromDate(new Date((Date.now()-lastSeenAllowance)))
+            )), async (snapshot) => {
+          setCallIds(oldCallIds => {
+            let newCallIds = [...(oldCallIds || [])];
+            snapshot.docChanges().forEach((change) => {
+              const id = change.doc.id
+              if (id) {
+                if (change.type === "added") {
+                  console.log("doc "+id+" added");
+                  console.log(typeof change.doc.data().lastSeen, change.doc.data().lastSeen)
+                  if (!newCallIds.includes(id)) {
+                    newCallIds.push(id);
+                  }
+                }
+                if (change.type === "modified") {
+                }
+                if (change.type === "removed") {
+                  newCallIds = newCallIds.filter(call => call !== id);
+                }
+              }
+            });
+            console.log("newCallIds",newCallIds)
+            return newCallIds;
+          });
+        }, (error) => {
+          console.error("Error in onSnapshot(collection(db, 'calls'))::", error);
+        });
+    
+        return () => unsubscribe();  // Clean up subscription
+    
+      }, []);
 
     const initMedia = async () => {
         const localStreamObject = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
