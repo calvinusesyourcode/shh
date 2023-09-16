@@ -97,115 +97,104 @@ export function StreamToAudience({ localStream, callId }: { localStream: any; ca
       </>
     );
 }
-function ConnectToBroadcast() {
+export function ConnectToBroadcast() {
+    const [isCallStarted, setCallStarted] = useState(false);
     let pc: any = null;
     let localStream: any = null;
     let remoteStream: any = null;
+    let unsubscribeDoc: any = null;
+    let unsubscribeCandidates: any = null;
+  
     const startCall = async () => {
-        //startWebcam
-        const response = await fetch("https://piano.metered.live/api/v1/turn/credentials?apiKey="+process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY);
+        setCallStarted(true)
+        const response = await fetch(`https://piano.metered.live/api/v1/turn/credentials?apiKey=${process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY}`);
         const stunAndTurnServers = await response.json();
-        const servers: object = {
-          iceServers: stunAndTurnServers,
-            iceCandidatePoolSize: 10,
-          };  
+        const servers = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };
+  
         pc = new RTCPeerConnection(servers);
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         remoteStream = new MediaStream();
-        
+  
         localStream.getTracks().forEach((track: any) => {
           pc.addTrack(track, localStream);
         });
-    
+  
         pc.ontrack = (e: any) => {
           e.streams[0].getTracks().forEach((track: any) => {
-            console.log("TRYING TO DISPLAY REMOTE STREAM");
-            console.log(track);
-            const hello = remoteStream.addTrack(track);
-            console.log(hello)
+            remoteStream?.addTrack(track);
           });
-        }
-
-        const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
-        
-    
-        console.log(localStream);
-        console.log(remoteStream);
-        myWebcam.srcObject = localStream;
-        myWebcam.play().catch(error => {
-          console.error(error)
-        });
-        //startCall
+        };
+  
         const callDoc = collection(db, 'calls');
         const callId = (await addDoc(callDoc, {})).id;
-        await updateDoc(doc(callDoc, "newCalls"), {[callId]: {createdAt:serverTimestamp(), callId: callId}})
-        // const callInputField: HTMLInputElement = document.getElementById("callInputField") as HTMLInputElement;
-        // callInputField.value = callId;
-    
+  
+        await updateDoc(doc(callDoc, 'newCalls'), { [callId]: { createdAt: serverTimestamp(), callId } });
+  
         const offerCandidates = collection(doc(callDoc, callId), 'offerCandidates');
         const answerCandidates = collection(doc(callDoc, callId), 'answerCandidates');
-    
-        
+  
         pc.onicecandidate = async (event: any) => {
           if (event.candidate) {
-            console.log({event_candidate1: event.candidate});
-            await setDoc(doc(offerCandidates), {...event.candidate.toJSON()})
+            await setDoc(doc(offerCandidates), { ...event.candidate.toJSON() });
           }
-        }
-    
+        };
+  
         const offerDescription = await pc.createOffer();
         await pc.setLocalDescription(offerDescription);
-    
-        await updateDoc(doc(callDoc, callId), { createdAt: serverTimestamp(), lastSeen: serverTimestamp(), offer: {sdp: offerDescription.sdp, type: offerDescription.type }})
-        
-        onSnapshot(doc(callDoc, callId), (snapshot) => {
+        await updateDoc(doc(callDoc, callId), { createdAt: serverTimestamp(), lastSeen: serverTimestamp(), offer: { sdp: offerDescription.sdp, type: offerDescription.type } });
+  
+        unsubscribeDoc = onSnapshot(doc(callDoc, callId), (snapshot) => {
           const data = snapshot.data();
-          console.log(data);
-          if (!pc.currentRemoteDescription && data?.answer) {
-            console.log({data_answer1: data.answer});
+          if (!pc?.currentRemoteDescription && data?.answer) {
             const answerDescription = new RTCSessionDescription(data.answer);
-            pc.setRemoteDescription(answerDescription);
+            pc?.setRemoteDescription(answerDescription);
           }
-        })
-    
-        onSnapshot(answerCandidates, (snapshot) => {
+        });
+  
+        unsubscribeCandidates = onSnapshot(answerCandidates, (snapshot) => {
           snapshot.docChanges().forEach((change) => {
             if (change.type === 'added') {
-              console.log({change_doc_data1: change.doc.data()});
               const candidate = new RTCIceCandidate(change.doc.data());
-              pc.addIceCandidate(candidate);
+              pc?.addIceCandidate(candidate);
             }
-          })
-        })
-        //showVideo
-        console.log("PROVING TRACKS ARE AVAILABLE");
-        console.log(remoteStream.getTracks());
-        console.log(remoteStream);
-        const theirWebcam: HTMLVideoElement = document.getElementById("their-webcam") as HTMLVideoElement;
-        theirWebcam.srcObject = remoteStream;
-        
-        theirWebcam.play().catch(error => {
-          console.error(error)
+          });
         });
-        
+  
         setInterval(async () => {
-            await updateDoc(doc(callDoc, callId), { lastSeen: serverTimestamp() })
-        }, 60000)
-    
-    }
+          if (callId) {
+            await updateDoc(doc(callDoc, callId), { lastSeen: serverTimestamp() });
+          }
+        }, 60000);
+      };
+  
+    const endCall = () => {
+      setCallStarted(false);
+      unsubscribeDoc && unsubscribeDoc();
+      unsubscribeCandidates && unsubscribeCandidates();
+      pc?.close();
+      pc = null;
+      localStream = null;
+      remoteStream = null;
+    };
+  
+    useEffect(() => {
+      return () => {
+        endCall();
+      };
+    }, []);
+  
     return (
-        <>
-          <p>v0.0000001</p>
-          <Button onClick={() => {startCall()}}>startCall</Button>
-          <div className="flex flex-row gap-4">
-          <video id="my-webcam" controls>
-          </video>
-          <video id="their-webcam" controls>
-          </video>
-          </div>
-        </>
-      )
-}
+      <>
+        <p>v0.0000001</p>
+        <Button onClick={() => startCall()} disabled={isCallStarted}>Start Call</Button>
+        <Button onClick={() => endCall()} disabled={!isCallStarted}>End Call</Button>
+        <div className="flex flex-row gap-4">
+          <video id="my-webcam" controls />
+          <video id="their-webcam" controls />
+        </div>
+      </>
+    );
+  }
 
 export function Broadcast() {
     const [localStream, setLocalStream] = useState<MediaStream | null>(null)
