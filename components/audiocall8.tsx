@@ -188,7 +188,7 @@ function StreamToAudience({ localStream, callId }: { localStream: any; callId: s
       }, [localStream, callId]);
     return (
         <>
-          <p>v0.0000001</p>
+          <p>{callId}</p>
           <div className="flex flex-row gap-4">
           <video id="my-webcam" controls>
           </video>
@@ -356,6 +356,7 @@ export function Broadcast() {
                 newCallIds = newCallIds.filter(id => id !== data.callId);
               }
             });
+            console.log("newCallIds",newCallIds)
             return newCallIds;
           });
         }, (error) => {
