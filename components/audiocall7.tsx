@@ -88,19 +88,20 @@ function StreamToAudience({ localStream, callOptions, callId }: { localStream: a
         //   console.error(error)
         // });
     }
-    joinCall()
+    useEffect(() => {
+      joinCall()
+    }, [])
     return (
         <>
-          <p>v0.0000001</p>
+          <p>{callId}</p>
           <div className="flex flex-row gap-4">
-          <video id="my-webcam" controls>
-          </video>
           <video id="their-webcam" controls>
           </video>
           </div>
         </>
       )
 }
+
 function StreamFromBroadcaster() {
     let pc: any = null;
     let localStream: any = null;
@@ -216,7 +217,7 @@ function StreamFromBroadcaster() {
 export function Broadcast() {
     const [localStream, setLocalStream] = useState<MediaStream | null>(null)
     const [callIds, setCallIds] = useState<string[]>([])
-    const [info, setInfo] = useState<string>("")
+    const [info, setInfo] = useState<string>("info")
     const [callOptions, setCallOptions] = useState<object>({})
 
     // const getCallId = async () => {
