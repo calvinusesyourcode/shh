@@ -7,10 +7,10 @@ import { collection, doc, setDoc, onSnapshot, getDoc, updateDoc, addDoc, serverT
 import { useContext, useEffect, useState } from "react";
 
 
-function AdminToNoob({ localStream, callId }: { localStream: any; callId: string }) {
+function StreamToAudience({ localStream, callOptions, callId }: { localStream: any; callOptions: any; callId: string }) {
     let pc: any = null;
     let remoteStream: MediaStream | null = null
-    const connectAsGuest = async () => {
+    const joinCall = async () => {
         // await startWebcam()
         const response = await fetch("https://piano.metered.live/api/v1/turn/credentials?apiKey="+process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY);
         const stunAndTurnServers = await response.json();
@@ -88,7 +88,7 @@ function AdminToNoob({ localStream, callId }: { localStream: any; callId: string
         //   console.error(error)
         // });
     }
-    connectAsGuest()
+    joinCall()
     return (
         <>
           <p>v0.0000001</p>
@@ -101,11 +101,11 @@ function AdminToNoob({ localStream, callId }: { localStream: any; callId: string
         </>
       )
 }
-function NoobToAdmin() {
+function StreamFromBroadcaster() {
     let pc: any = null;
     let localStream: any = null;
     let remoteStream: any = null;
-    const connectAsHost = async () => {
+    const startCall = async () => {
         //startWebcam
         const response = await fetch("https://piano.metered.live/api/v1/turn/credentials?apiKey="+process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY);
         const stunAndTurnServers = await response.json();
@@ -142,9 +142,6 @@ function NoobToAdmin() {
         //startCall
         const callDoc = collection(db, 'calls');
         const callId = (await addDoc(callDoc, {})).id;
-        await updateDoc(doc(callDoc, "newCalls"), {[callId]: {createdAt:serverTimestamp(), callId: callId}})
-        // const callInputField: HTMLInputElement = document.getElementById("callInputField") as HTMLInputElement;
-        // callInputField.value = callId;
     
         const offerCandidates = collection(doc(callDoc, callId), 'offerCandidates');
         const answerCandidates = collection(doc(callDoc, callId), 'answerCandidates');
@@ -205,7 +202,7 @@ function NoobToAdmin() {
     return (
         <>
           <p>v0.0000001</p>
-          <Button onClick={() => {connectAsHost()}}>connectAsHost</Button>
+          <Button onClick={() => {startCall()}}>startCall</Button>
           <div className="flex flex-row gap-4">
           <video id="my-webcam" controls>
           </video>
@@ -216,22 +213,22 @@ function NoobToAdmin() {
       )
 }
 
-export function WebcallAsAdmin() {
+export function Broadcast() {
     const [localStream, setLocalStream] = useState<MediaStream | null>(null)
     const [callIds, setCallIds] = useState<string[]>([])
     const [info, setInfo] = useState<string>("")
+    const [callOptions, setCallOptions] = useState<object>({})
 
-    const getCallId = async () => {
-        const newCallIds: string[] = [];
-        (await getDocs(query(collection(db, 'calls'), orderBy("createdAt","desc"), limit(3)))).forEach((doc => {newCallIds.push(doc.id)}))
-        setCallIds(newCallIds)
-    }
-    useEffect(() => {
-        getCallId()
-    },[])
+    // const getCallId = async () => {
+    //     const newCallIds: string[] = [];
+    //     (await getDocs(query(collection(db, 'calls'), orderBy("createdAt","desc"), limit(3)))).forEach((doc => {newCallIds.push(doc.id)}))
+    //     setCallIds(newCallIds)
+    // }
+    // useEffect(() => {
+    //     getCallId()
+    // },[])
 
     onSnapshot(collection(db, 'calls'), async (snapshot) => {
-      console.log("onSnapshot990")
       snapshot.docChanges().forEach((change) => {
         const data = change.doc.data()
         if (change.type === "added") {
@@ -241,7 +238,6 @@ export function WebcallAsAdmin() {
           }
         }
         if (change.type === "modified") {
-          console.log("modified::", change.doc.data())
         }
         if (change.type === "removed") {
           if (data.callId in callIds) {
@@ -256,7 +252,7 @@ export function WebcallAsAdmin() {
     )})
 
     
-    
+    // await updateDoc(doc(callDoc, "newCalls"), {[callId]: {createdAt:serverTimestamp(), callId: callId}})
     // const ref = doc(collection(db, 'calls'), 'newCalls')
     // onSnapshot(ref, (snapshot) => {
     //   console.log("onSnapshot991")
@@ -279,10 +275,10 @@ export function WebcallAsAdmin() {
 
     return (
         <>
-        <span>{info}</span>
         <Button onClick={() => {initMedia()}}>initProcess</Button>
+        <p className='text-sm'>{info}</p>
         {callIds.map(callId => (
-        <AdminToNoob key={callId} localStream={localStream} callId={callId} />
+        <StreamToAudience key={callId} localStream={localStream} callOptions={callOptions} callId={callId} />
       ))}
         </>
     )
@@ -291,10 +287,10 @@ export function WebcallAsAdmin() {
 
 }
 
-export function WebcallAsNoob() {
+export function ListenToBroadcast() {
     return (
         <>
-        <NoobToAdmin />
+        <StreamFromBroadcaster />
         </>
     )
 }
@@ -303,7 +299,7 @@ export function Webcall() {
     const { user, role } = useContext(AppContext)
     return (
         <>
-            {user && role == "admin" ? <WebcallAsAdmin /> : <WebcallAsNoob />}
+            {user && role == "admin" ? <Broadcast /> : <ListenToBroadcast />}
         </>
     )
 }
