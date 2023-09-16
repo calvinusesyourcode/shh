@@ -230,41 +230,42 @@ export function WebcallAsAdmin() {
         getCallId()
     },[])
 
-    const ref = doc(collection(db, 'calls'), 'newCalls')
-    
-        onSnapshot(collection(db, 'calls'), (snapshot) => {
-          console.log("onSnapshot990")
-          snapshot.docChanges().forEach((change) => {
-            if (change.type === "added") {
-              console.log("added::", change.doc.data());
-              if (change.doc.data().lastSeen) {
-                const lastSeen = change.doc.data().lastSeen
-                console.log("lastSeen",typeof lastSeen, lastSeen)
-              }
-            }
-            if (change.type === "modified") {
-              console.log("modified::", change.doc.data())
-            }
-            if (change.type === "removed") {
-              console.log("removed::", change.doc.data())
-            }
-          })
-        }, (error) => {
-          console.error("Error in onSnapshot(collection(db, 'calls'))::", error
-        )})
-    
-    onSnapshot(ref, (snapshot) => {
-      console.log("onSnapshot991")
-      const data = snapshot.data()
-      for (let key in data) {
-        const callId = data[key].callId;
-        const lastSeen = data[key].lastSeen;
-        console.log("lastSeen", typeof lastSeen, lastSeen)
-        if (callId && !callIds.includes(callId)) {
-          setCallIds((prevCallIds) => [...prevCallIds, callId]);
+    onSnapshot(collection(db, 'calls'), async (snapshot) => {
+      console.log("onSnapshot990")
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === "added") {
+          const data = change.doc.data()
+          setInfo(old => old + "\n" + JSON.stringify(data))
+          if (!(data.callId in callIds)) {
+            setCallIds(oldIds => [...oldIds, data.callId])
+          }
         }
-      }
-    });
+        if (change.type === "modified") {
+          console.log("modified::", change.doc.data())
+        }
+        if (change.type === "removed") {
+          console.log("removed::", change.doc.data())
+        }
+      })
+    }, (error) => {
+      console.error("Error in onSnapshot(collection(db, 'calls'))::", error
+    )})
+
+    
+    
+    // const ref = doc(collection(db, 'calls'), 'newCalls')
+    // onSnapshot(ref, (snapshot) => {
+    //   console.log("onSnapshot991")
+    //   const data = snapshot.data()
+    //   for (let key in data) {
+    //     const callId = data[key].callId;
+    //     const lastSeen = data[key].lastSeen;
+    //     console.log("lastSeen", typeof lastSeen, lastSeen)
+    //     if (callId && !callIds.includes(callId)) {
+    //       setCallIds((prevCallIds) => [...prevCallIds, callId]);
+    //     }
+    //   }
+    // });
 
     const initMedia = async () => {
         const localStreamObject = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
