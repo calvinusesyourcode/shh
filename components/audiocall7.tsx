@@ -242,6 +242,7 @@ export function WebcallAsAdmin() {
     onSnapshot(collection(db, 'calls'), (snapshot) => {
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added") {
+          console.log("change.doc.data()", change.doc.data());
           if (change.doc.data().lastSeen) {
             const lastSeen = change.doc.data().lastSeen
             console.log("lastSeen",typeof lastSeen, lastSeen)
