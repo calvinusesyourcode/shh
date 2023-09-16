@@ -12,7 +12,6 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { useEffect, useState } from "react";
 import { useUserData } from "@/lib/hooks";
 import { AppContext } from "@/lib/context";
-import { auth } from "@/lib/firebase";
 
 interface RootLayoutProps {
   children: React.ReactNode
@@ -20,7 +19,6 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   const userData = useUserData()
-  console.log(auth)
 
   return (
     <>
