@@ -7,10 +7,10 @@ import { collection, doc, setDoc, onSnapshot, getDoc, updateDoc, addDoc, serverT
 import { useContext, useEffect, useState } from "react";
 
 
-function SendToHost({ localStream, callId }: { localStream: any; callId: string }) {
+function StreamToAudience({ localStream, callId }: { localStream: any; callId: string }) {
     let pc: any = null;
     let remoteStream: MediaStream | null = null
-    const connectAsGuest = async () => {
+    const joinCall = async () => {
         // await startWebcam()
         const response = await fetch("https://piano.metered.live/api/v1/turn/credentials?apiKey="+process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY);
         const stunAndTurnServers = await response.json();
@@ -88,7 +88,7 @@ function SendToHost({ localStream, callId }: { localStream: any; callId: string 
         //   console.error(error)
         // });
     }
-    connectAsGuest()
+    joinCall()
     return (
         <>
           <p>v0.0000001</p>
@@ -101,11 +101,11 @@ function SendToHost({ localStream, callId }: { localStream: any; callId: string 
         </>
       )
 }
-function SendToGuest() {
+function StreamFromBroadcaster() {
     let pc: any = null;
     let localStream: any = null;
     let remoteStream: any = null;
-    const connectAsHost = async () => {
+    const startCall = async () => {
         //startWebcam
         const response = await fetch("https://piano.metered.live/api/v1/turn/credentials?apiKey="+process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY);
         const stunAndTurnServers = await response.json();
@@ -142,7 +142,7 @@ function SendToGuest() {
         //startCall
         const callDoc = collection(db, 'calls');
         const callId = (await addDoc(callDoc, {})).id;
-        await updateDoc(doc(callDoc, "newCalls"), {[callId]: {createdAt:serverTimestamp(), callId: callId}})
+        // await updateDoc(doc(callDoc, "newCalls"), {[callId]: {createdAt:serverTimestamp(), callId: callId}})
         // const callInputField: HTMLInputElement = document.getElementById("callInputField") as HTMLInputElement;
         // callInputField.value = callId;
     
@@ -200,7 +200,7 @@ function SendToGuest() {
     return (
         <>
           <p>v0.0000001</p>
-          <Button onClick={() => {connectAsHost()}}>connectAsHost</Button>
+          <Button onClick={() => {startCall()}}>startCall</Button>
           <div className="flex flex-row gap-4">
           <video id="my-webcam" controls>
           </video>
@@ -211,32 +211,56 @@ function SendToGuest() {
       )
 }
 
-export function WebcallAsAdmin() {
+export function Broadcast() {
     const [localStream, setLocalStream] = useState<MediaStream | null>(null)
     const [callIds, setCallIds] = useState<string[]>([])
+    const [info, setInfo] = useState<string>("info")
 
-    const getCallId = async () => {
-        const newCallIds: string[] = [];
-        (await getDocs(query(collection(db, 'calls'), orderBy("createdAt","desc"), limit(3)))).forEach((doc => {newCallIds.push(doc.id)}))
-        setCallIds(newCallIds)
-    }
-    useEffect(() => {
-        getCallId()
-    },[])
+    // const getCallId = async () => {
+    //     const newCallIds: string[] = [];
+    //     (await getDocs(query(collection(db, 'calls'), orderBy("createdAt","desc"), limit(3)))).forEach((doc => {newCallIds.push(doc.id)}))
+    //     setCallIds(newCallIds)
+    // }
+    // useEffect(() => {
+    //     getCallId()
+    // },[])
 
-    const ref = doc(collection(db, 'calls'), 'newCalls')
+    // const ref = doc(collection(db, 'calls'), 'newCalls')
 
-    onSnapshot(ref, (snapshot) => {
-      const data = snapshot.data()
-      for (let key in data) {
-        const callId = data[key].callId;
-        const lastSeen = data[key].lastSeen;
-        console.log("lastSeen", typeof lastSeen, lastSeen)
-        if (callId && !callIds.includes(callId)) {
-          setCallIds((prevCallIds) => [...prevCallIds, callId]);
-        }
-      }
-    });
+    // onSnapshot(ref, (snapshot) => {
+    //   const data = snapshot.data()
+    //   for (let key in data) {
+    //     const callId = data[key].callId;
+    //     const lastSeen = data[key].lastSeen;
+    //     console.log("lastSeen", typeof lastSeen, lastSeen)
+    //     if (callId && !callIds.includes(callId)) {
+    //       setCallIds((prevCallIds) => [...prevCallIds, callId]);
+    //     }
+    //   }
+    // });
+
+    onSnapshot(collection(db, 'calls'), async (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          const data = change.doc.data()
+          if (change.type === "added") {
+            setInfo(old => old + "\n" + JSON.stringify(data))
+            if (!(data.callId in callIds)) {
+              setCallIds(oldIds => [...oldIds, data.callId])
+            }
+          }
+          if (change.type === "modified") {
+          }
+          if (change.type === "removed") {
+            if (data.callId in callIds) {
+              setCallIds(oldIds => oldIds.filter(id => id !== data.callId));
+              setInfo(oldInfo => oldInfo + "\n" + "removed callId " + data.callId)
+            }
+            
+          }
+        })
+      }, (error) => {
+        console.error("Error in onSnapshot(collection(db, 'calls'))::", error
+      )})
 
     const initMedia = async () => {
         const localStreamObject = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
@@ -247,7 +271,7 @@ export function WebcallAsAdmin() {
         <>
         <Button onClick={() => {initMedia()}}>initProcess</Button>
         {callIds.map(callId => (
-        <SendToHost key={callId} localStream={localStream} callId={callId} />
+        <StreamToAudience key={callId} localStream={localStream} callId={callId} />
       ))}
         </>
     )
@@ -256,10 +280,10 @@ export function WebcallAsAdmin() {
 
 }
 
-export function WebcallAsNoob() {
+export function ListenToBroadcast() {
     return (
         <>
-        <SendToGuest />
+        <StreamFromBroadcaster />
         </>
     )
 }
@@ -268,7 +292,7 @@ export function Webcall() {
     const { user, role } = useContext(AppContext)
     return (
         <>
-            {user && role == "admin" ? <WebcallAsAdmin /> : <WebcallAsNoob />}
+            {user && role == "admin" ? <Broadcast /> : <ListenToBroadcast />}
         </>
     )
 }
