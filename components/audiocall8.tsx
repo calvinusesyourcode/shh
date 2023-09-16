@@ -346,7 +346,9 @@ export function Broadcast() {
               const id = change.doc.id
               if (id) {
                 if (change.type === "added") {
-                  if (!newCallIds.includes(id) && change.doc.data().lastSeen) {
+                  console.log("doc "+id+" added");
+                  console.log(typeof change.doc.data().lastSeen, change.doc.data().lastSeen)
+                  if (!newCallIds.includes(id)) {
                     newCallIds.push(id);
                   }
                 }
