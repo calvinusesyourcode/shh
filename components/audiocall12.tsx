@@ -118,7 +118,11 @@ export function ConnectToBroadcast() {
         localStream.getTracks().forEach((track: any) => {
           pc.addTrack(track, localStream);
         });
-  
+        
+        const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
+        myWebcam.srcObject = localStream;
+        myWebcam.play().catch(error => {console.error(error)});
+
         pc.ontrack = (e: any) => {
           e.streams[0].getTracks().forEach((track: any) => {
             remoteStream?.addTrack(track);
@@ -164,7 +168,11 @@ export function ConnectToBroadcast() {
           if (callId) {
             await updateDoc(doc(callDoc, callId), { lastSeen: serverTimestamp() });
           }
-        }, 60000);
+        }, 120000);
+
+        const theirWebcam: HTMLVideoElement = document.getElementById("their-webcam") as HTMLVideoElement;
+        theirWebcam.srcObject = remoteStream;
+        theirWebcam.play().catch(error => {console.error(error)});
       };
   
     const endCall = () => {
