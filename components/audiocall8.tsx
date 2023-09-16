@@ -239,25 +239,27 @@ export function Broadcast() {
     //   }
     // });
 
+    
+
     onSnapshot(collection(db, 'calls'), async (snapshot) => {
+        const calls: string[] = callIds
+        const newCalls: string[] = []
         snapshot.docChanges().forEach((change) => {
           const data = change.doc.data()
           if (change.type === "added") {
-            setInfo(old => old + "\n" + JSON.stringify(data))
-            if (!(data.callId in callIds)) {
-              setCallIds(oldIds => [...oldIds, data.callId])
+            if (!(data.callId in calls)) {
+              newCalls.push(data.callId)
             }
           }
           if (change.type === "modified") {
           }
           if (change.type === "removed") {
-            if (data.callId in callIds) {
-              setCallIds(oldIds => oldIds.filter(id => id !== data.callId));
-              setInfo(oldInfo => oldInfo + "\n" + "removed callId " + data.callId)
+            if (data.callId in calls) {
+              calls.filter(id => id != data.callId)
             }
-            
           }
         })
+        setCallIds([...calls, ...callIds])
       }, (error) => {
         console.error("Error in onSnapshot(collection(db, 'calls'))::", error
       )})
