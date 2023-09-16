@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { AppContext } from "@/lib/context";
 import { db } from "@/lib/firebase";
-import { collection, doc, setDoc, onSnapshot, getDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, limit, getDocs, Timestamp } from "firebase/firestore";
+import { collection, doc, setDoc, onSnapshot, getDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, limit, getDocs, Timestamp, deleteDoc } from "firebase/firestore";
 import { useContext, useEffect, useState } from "react";
 
 
@@ -195,6 +195,11 @@ function NoobToAdmin() {
         setInterval(async () => {
             await updateDoc(doc(callDoc, callId), { lastSeen: serverTimestamp() })
         }, 60000)
+
+        window.addEventListener('beforeunload', async (e) => {
+          await deleteDoc(doc(callDoc, callId));
+        });
+        console.log("added beforeunload event")
     
     }
     return (
