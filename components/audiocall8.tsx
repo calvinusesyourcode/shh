@@ -212,10 +212,7 @@ function StreamFromBroadcaster() {
 }
 
 export function Broadcast() {
-    const [localStream, setLocalStream] = useState<MediaStream | null>(null)
-    const [callIds, setCallIds] = useState<string[]>([])
-    const [info, setInfo] = useState<string>("info")
-
+    
     // const getCallId = async () => {
     //     const newCallIds: string[] = [];
     //     (await getDocs(query(collection(db, 'calls'), orderBy("createdAt","desc"), limit(3)))).forEach((doc => {newCallIds.push(doc.id)}))
@@ -224,47 +221,53 @@ export function Broadcast() {
     // useEffect(() => {
     //     getCallId()
     // },[])
-
+    
     // const ref = doc(collection(db, 'calls'), 'newCalls')
-
+    
     // onSnapshot(ref, (snapshot) => {
-    //   const data = snapshot.data()
-    //   for (let key in data) {
-    //     const callId = data[key].callId;
-    //     const lastSeen = data[key].lastSeen;
-    //     console.log("lastSeen", typeof lastSeen, lastSeen)
-    //     if (callId && !callIds.includes(callId)) {
-    //       setCallIds((prevCallIds) => [...prevCallIds, callId]);
+        //   const data = snapshot.data()
+        //   for (let key in data) {
+            //     const callId = data[key].callId;
+            //     const lastSeen = data[key].lastSeen;
+            //     console.log("lastSeen", typeof lastSeen, lastSeen)
+            //     if (callId && !callIds.includes(callId)) {
+                //       setCallIds((prevCallIds) => [...prevCallIds, callId]);
     //     }
     //   }
     // });
-
+    
+    const [localStream, setLocalStream] = useState<MediaStream | null>(null)
+    const [callIds, setCallIds] = useState<string[]>([])
+    const [info, setInfo] = useState<string>("info")
     
 
-    onSnapshot(collection(db, 'calls'), async (snapshot) => {
-        const calls: string[] = callIds
-        const newCalls: string[] = []
-        snapshot.docChanges().forEach((change) => {
-          const data = change.doc.data()
-          if (change.type === "added") {
-            if (!(data.callId in calls)) {
-              newCalls.push(data.callId)
-            }
-          }
-          if (change.type === "modified") {
-          }
-          if (change.type === "removed") {
-            if (data.callId in calls) {
-              calls.filter(id => id != data.callId)
-            }
-          }
-        })
-        setCallIds([...calls, ...newCalls])
-        console.log("calls",calls)
-        console.log("newCalls",newCalls)
-      }, (error) => {
-        console.error("Error in onSnapshot(collection(db, 'calls'))::", error
-      )})
+    useEffect(() => {
+        const unsubscribe = onSnapshot(collection(db, 'calls'), async (snapshot) => {
+          setCallIds(oldCallIds => {
+            let newCallIds = [...oldCallIds];
+            snapshot.docChanges().forEach((change) => {
+              const data = change.doc.data();
+              if (change.type === "added") {
+                if (!newCallIds.includes(data.callId)) {
+                  newCallIds.push(data.callId);
+                }
+              }
+              if (change.type === "modified") {
+                // Handle modified docs
+              }
+              if (change.type === "removed") {
+                newCallIds = newCallIds.filter(id => id !== data.callId);
+              }
+            });
+            return newCallIds;
+          });
+        }, (error) => {
+          console.error("Error in onSnapshot(collection(db, 'calls'))::", error);
+        });
+    
+        return () => unsubscribe();  // Clean up subscription
+    
+      }, []);
 
     const initMedia = async () => {
         const localStreamObject = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
@@ -300,3 +303,5 @@ export function Webcall() {
         </>
     )
 }
+
+  
