@@ -341,8 +341,9 @@ export function Broadcast() {
     useEffect(() => {
         const unsubscribe = onSnapshot(collection(db, 'calls'), async (snapshot) => {
           setCallIds(oldCallIds => {
-            let newCallIds = [...oldCallIds];
+            let newCallIds = [...(oldCallIds || [])];
             snapshot.docChanges().forEach((change) => {
+              console.log("change")
               const data = change.doc.data();
               if (change.type === "added") {
                 if (!newCallIds.includes(data.callId)) {

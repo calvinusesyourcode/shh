@@ -4,7 +4,7 @@ import { Webcall } from "@/components/audiocall8";
 import { AppContext } from "@/lib/context";
 import { useUserData } from "@/lib/hooks";
 import { GetServerSideProps } from "next";
-import { useContext } from "react";
+import { useContext, useState, useEffect } from "react";
 
 export default function IndexPage() {
   const { user } = useContext(AppContext)
