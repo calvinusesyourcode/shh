@@ -7,30 +7,27 @@ import { collection, doc, setDoc, onSnapshot, getDoc, updateDoc, addDoc, serverT
 import { useContext, useEffect, useState } from "react";
 
 
-function SendToHost({ localStream, remoteStream, callId }: { localStream: any; remoteStream: any; callId: string }) {
+function SendToHost({ localStream, callId }: { localStream: any; callId: string }) {
     let pc: any = null;
+    let remoteStream: MediaStream | null = null
     const connectAsGuest = async () => {
         // await startWebcam()
         const response = await fetch("https://piano.metered.live/api/v1/turn/credentials?apiKey="+process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY);
         const stunAndTurnServers = await response.json();
-        const servers: object = {
-          iceServers: stunAndTurnServers,
-            iceCandidatePoolSize: 10,
-          };  
+        const servers: object = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };  
         pc = new RTCPeerConnection(servers);
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
         remoteStream = new MediaStream();
         
         localStream.getTracks().forEach((track: any) => {
+          console.log("added localStream track to peer connection:", track);
           pc.addTrack(track, localStream);
         });
     
         pc.ontrack = (e: any) => {
           e.streams[0].getTracks().forEach((track: any) => {
-            console.log("TRYING TO DISPLAY REMOTE STREAM");
-            console.log(track);
-            const hello = remoteStream.addTrack(track);
-            console.log(hello)
+            console.log("adding track from peer connection to remoteStream:", track)
+            if (remoteStream) {remoteStream.addTrack(track)}
           });
         }
         // const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
@@ -43,26 +40,16 @@ function SendToHost({ localStream, remoteStream, callId }: { localStream: any; r
         //   console.error(error)
         // });
 
-        // await answerCall()
-        // let callId;
-        // (await getDocs(query(collection(db, 'calls'), orderBy("createdAt","desc"), limit(1)))).forEach((doc => {callId = doc.id}))
-        // const callInputField: HTMLInputElement = document.getElementById("callInputField") as HTMLInputElement;
-        // callId = "DVBaSUUxPefEmai9B9Fd"
-        // if (callId) {callInputField.value = callId}
-        if (!callId) {
-            console.error("callId not found")
-        }
+        if (!callId) {console.error("callId not found")}
         const callDoc = doc(collection(db, 'calls'), callId)
-        // const callDocs = query(collection(db, 'calls'))
-        // for (let i = 0, l = callDocs.length; i++) {}
         
         const answerCandidates = collection(callDoc, 'answerCandidates');
         const offerCandidates = collection(callDoc, 'offerCandidates');
     
         pc.onicecandidate = async (event: any) => {
           if (event.candidate) {
-            console.log({event_candidate2: event.candidate})
             await setDoc(doc(answerCandidates), {...event.candidate.toJSON()})
+            console.log("found ICE answer candidate:", event.candidate)
           }
         }
     
@@ -84,9 +71,9 @@ function SendToHost({ localStream, remoteStream, callId }: { localStream: any; r
           snapshot.docChanges().forEach((change) => {
             console.log(change);
             if (change.type === 'added') {
-              console.log({change_doc_data_2: change.doc.data()})
-              let data = change.doc.data();
+              const data = change.doc.data();
               pc.addIceCandidate(new RTCIceCandidate(data));
+              console.log("adding ice offer candidate to peer connection:", data)
             }
           })
         })
@@ -226,7 +213,6 @@ function SendToGuest() {
 
 export function WebcallAsAdmin() {
     const [localStream, setLocalStream] = useState<MediaStream | null>(null)
-    let remoteStream: MediaStream | null = null;
     const [callIds, setCallIds] = useState<string[]>([])
 
     const getCallId = async () => {
@@ -261,7 +247,7 @@ export function WebcallAsAdmin() {
         <>
         <Button onClick={() => {initMedia()}}>initProcess</Button>
         {callIds.map(callId => (
-        <SendToHost key={callId} localStream={localStream} remoteStream={remoteStream} callId={callId} />
+        <SendToHost key={callId} localStream={localStream} callId={callId} />
       ))}
         </>
     )
