@@ -231,7 +231,28 @@ export function WebcallAsAdmin() {
     },[])
 
     const ref = doc(collection(db, 'calls'), 'newCalls')
-
+    
+        onSnapshot(collection(db, 'calls'), (snapshot) => {
+          console.log("onSnapshot990")
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === "added") {
+              console.log("added::", change.doc.data());
+              if (change.doc.data().lastSeen) {
+                const lastSeen = change.doc.data().lastSeen
+                console.log("lastSeen",typeof lastSeen, lastSeen)
+              }
+            }
+            if (change.type === "modified") {
+              console.log("modified::", change.doc.data())
+            }
+            if (change.type === "removed") {
+              console.log("removed::", change.doc.data())
+            }
+          })
+        }, (error) => {
+          console.error("Error in onSnapshot(collection(db, 'calls'))::", error
+        )})
+    
     onSnapshot(ref, (snapshot) => {
       const data = snapshot.data()
       for (let key in data) {
@@ -243,27 +264,6 @@ export function WebcallAsAdmin() {
         }
       }
     });
-
-    onSnapshot(collection(db, 'calls'), (snapshot) => {
-      console.log("onSnapshot990")
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "added") {
-          console.log("added::", change.doc.data());
-          if (change.doc.data().lastSeen) {
-            const lastSeen = change.doc.data().lastSeen
-            console.log("lastSeen",typeof lastSeen, lastSeen)
-          }
-        }
-        if (change.type === "modified") {
-          console.log("modified::", change.doc.data())
-        }
-        if (change.type === "removed") {
-          console.log("removed::", change.doc.data())
-        }
-      })
-    }, (error) => {
-      console.error("Error in onSnapshot(collection(db, 'calls'))::", error
-    )})
 
     const initMedia = async () => {
         const localStreamObject = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
