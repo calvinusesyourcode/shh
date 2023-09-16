@@ -14,7 +14,7 @@ function AdminToNoob({ localStream, callId }: { localStream: any; callId: string
         // await startWebcam()
         const response = await fetch("https://piano.metered.live/api/v1/turn/credentials?apiKey="+process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY);
         const stunAndTurnServers = await response.json();
-        const servers: object = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };  
+        const servers: object = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 5 };  
         pc = new RTCPeerConnection(servers);
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
         remoteStream = new MediaStream();
@@ -111,7 +111,7 @@ function NoobToAdmin() {
         const stunAndTurnServers = await response.json();
         const servers: object = {
           iceServers: stunAndTurnServers,
-            iceCandidatePoolSize: 10,
+            iceCandidatePoolSize: 5,
           };  
         pc = new RTCPeerConnection(servers);
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
@@ -233,8 +233,8 @@ export function WebcallAsAdmin() {
     onSnapshot(collection(db, 'calls'), async (snapshot) => {
       console.log("onSnapshot990")
       snapshot.docChanges().forEach((change) => {
+        const data = change.doc.data()
         if (change.type === "added") {
-          const data = change.doc.data()
           setInfo(old => old + "\n" + JSON.stringify(data))
           if (!(data.callId in callIds)) {
             setCallIds(oldIds => [...oldIds, data.callId])
@@ -244,7 +244,11 @@ export function WebcallAsAdmin() {
           console.log("modified::", change.doc.data())
         }
         if (change.type === "removed") {
-          console.log("removed::", change.doc.data())
+          if (data.callId in callIds) {
+            setCallIds(oldIds => oldIds.filter(id => id !== data.callId));
+            setInfo(oldInfo => oldInfo + "\n" + "removed callId " + data.callId)
+          }
+          
         }
       })
     }, (error) => {
@@ -275,7 +279,7 @@ export function WebcallAsAdmin() {
 
     return (
         <>
-        <span></span>
+        <span>{info}</span>
         <Button onClick={() => {initMedia()}}>initProcess</Button>
         {callIds.map(callId => (
         <AdminToNoob key={callId} localStream={localStream} callId={callId} />
