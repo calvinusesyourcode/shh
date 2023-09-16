@@ -89,6 +89,103 @@ function StreamToAudience({ localStream, callId }: { localStream: any; callId: s
         // });
     }
     joinCall()
+
+    useEffect(() => {
+        let pc: any = null;
+        let remoteStream: MediaStream | null = new MediaStream();
+        
+        const joinCall = async () => {
+        // await startWebcam()
+        const response = await fetch("https://piano.metered.live/api/v1/turn/credentials?apiKey="+process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY);
+        const stunAndTurnServers = await response.json();
+        const servers: object = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };  
+        pc = new RTCPeerConnection(servers);
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
+        remoteStream = new MediaStream();
+        
+        localStream.getTracks().forEach((track: any) => {
+          console.log("added localStream track to peer connection:", track);
+          pc.addTrack(track, localStream);
+        });
+    
+        pc.ontrack = (e: any) => {
+          e.streams[0].getTracks().forEach((track: any) => {
+            console.log("adding track from peer connection to remoteStream:", track)
+            if (remoteStream) {remoteStream.addTrack(track)}
+          });
+        }
+        // const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
+        
+    
+        // console.log(localStream);
+        // console.log(remoteStream);
+        // myWebcam.srcObject = localStream;
+        // myWebcam.play().catch(error => {
+        //   console.error(error)
+        // });
+
+        if (!callId) {console.error("callId not found")}
+        const callDoc = doc(collection(db, 'calls'), callId)
+        
+        const answerCandidates = collection(callDoc, 'answerCandidates');
+        const offerCandidates = collection(callDoc, 'offerCandidates');
+    
+        pc.onicecandidate = async (event: any) => {
+          if (event.candidate) {
+            await setDoc(doc(answerCandidates), {...event.candidate.toJSON()})
+            console.log("found ICE answer candidate:", event.candidate)
+          }
+        }
+    
+        const callData: any = (await getDoc(callDoc)).data();
+        const offerDescription = callData.offer;
+        await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
+    
+        const answerDescription = await pc.createAnswer();
+        await pc.setLocalDescription(answerDescription);
+    
+        const answer = {
+          type: answerDescription.type,
+          sdp: answerDescription.sdp,
+        };
+    
+        await updateDoc(callDoc, {answer});
+    
+        onSnapshot(offerCandidates, (snapshot) => {
+          snapshot.docChanges().forEach((change) => {
+            console.log(change);
+            if (change.type === 'added') {
+              const data = change.doc.data();
+              pc.addIceCandidate(new RTCIceCandidate(data));
+              console.log("adding ice offer candidate to peer connection:", data)
+            }
+          })
+        })
+        // await showVideo()
+        console.log("PROVING TRACKS ARE AVAILABLE");
+        console.log(remoteStream.getTracks());
+        console.log(remoteStream);
+        // const theirWebcam: HTMLVideoElement = document.getElementById("their-webcam") as HTMLVideoElement;
+        // theirWebcam.srcObject = remoteStream;
+        
+        // theirWebcam.play().catch(error => {
+        //   console.error(error)
+        // });
+    }
+        
+        if (callId) {joinCall()};
+        
+        // Cleanup logic
+        return () => {
+          if (pc) {
+            pc.close();
+          }
+          if (remoteStream) {
+            remoteStream.getTracks().forEach(track => track.stop());
+          }
+        };
+    
+      }, [localStream, callId]);
     return (
         <>
           <p>v0.0000001</p>
