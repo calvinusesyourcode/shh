@@ -5,27 +5,16 @@ import { AppContext } from "@/lib/context";
 import { db } from "@/lib/firebase";
 import { collection, doc, setDoc, onSnapshot, getDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, limit, getDocs, Timestamp, deleteDoc } from "firebase/firestore";
 import { useContext, useEffect, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 
 
-function StreamToAudience({ localStream, callOptions, callId }: { localStream: any; callOptions: any; callId: string }) {
+function StreamToAudience({ localStream, callId }: { localStream: any; callId: string }) {
     let pc: any = null;
     let remoteStream: MediaStream | null = null
     const joinCall = async () => {
         // await startWebcam()
         const response = await fetch("https://piano.metered.live/api/v1/turn/credentials?apiKey="+process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY);
         const stunAndTurnServers = await response.json();
-        const servers: object = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 5 };  
+        const servers: object = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };  
         pc = new RTCPeerConnection(servers);
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
         remoteStream = new MediaStream();
@@ -123,7 +112,7 @@ function StreamFromBroadcaster() {
         const stunAndTurnServers = await response.json();
         const servers: object = {
           iceServers: stunAndTurnServers,
-            iceCandidatePoolSize: 5,
+            iceCandidatePoolSize: 10,
           };  
         pc = new RTCPeerConnection(servers);
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
@@ -231,15 +220,6 @@ export function Broadcast() {
     const [info, setInfo] = useState<string>("info")
     const [callOptions, setCallOptions] = useState<object>({})
 
-    useEffect(() => {
-      setCallOptions({
-        broadcastVideo: true,
-        broadcastAudio: true,
-        audienceVideo: false,
-        audienceAudio: false,
-      })
-    })
-
     // const getCallId = async () => {
     //     const newCallIds: string[] = [];
     //     (await getDocs(query(collection(db, 'calls'), orderBy("createdAt","desc"), limit(3)))).forEach((doc => {newCallIds.push(doc.id)}))
@@ -293,19 +273,15 @@ export function Broadcast() {
         setLocalStream(localStreamObject)
     }
 
-
     return (
         <>
         <Button onClick={() => {initMedia()}}>initProcess</Button>
         {/* <p className='text-sm'>{info}</p> */}
         {callIds.map(callId => (
-        <StreamToAudience key={callId} localStream={localStream} callOptions={callOptions} callId={callId} />
+        <StreamToAudience key={callId} localStream={localStream} callId={callId} />
       ))}
         </>
     )
-
-
-
 }
 
 export function ListenToBroadcast() {
