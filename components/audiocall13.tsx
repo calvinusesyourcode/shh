@@ -286,7 +286,7 @@ export function Broadcast() {
             <DialogHeader>
             <DialogTitle>Broadcast settings</DialogTitle>
             <DialogDescription>
-                Don't forget to save your changes.
+                Don&apos;t forget to save your changes.
             </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
