@@ -344,17 +344,18 @@ export function Broadcast() {
             let newCallIds = [...(oldCallIds || [])];
             snapshot.docChanges().forEach((change) => {
               console.log("change")
-              const data = change.doc.data();
-              if (change.type === "added") {
-                if (!newCallIds.includes(data.callId)) {
-                  newCallIds.push(data.callId);
+              const id = change.doc.id
+              if (id) {
+                if (change.type === "added") {
+                  if (!newCallIds.includes(id)) {
+                    newCallIds.push(id);
+                  }
                 }
-              }
-              if (change.type === "modified") {
-                // Handle modified docs
-              }
-              if (change.type === "removed") {
-                newCallIds = newCallIds.filter(id => id !== data.callId);
+                if (change.type === "modified") {
+                }
+                if (change.type === "removed") {
+                  newCallIds = newCallIds.filter(call => call !== id);
+                }
               }
             });
             console.log("newCallIds",newCallIds)
