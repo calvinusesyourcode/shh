@@ -276,7 +276,7 @@ export function Broadcast() {
   const [audioInputLevel, setAudioInputLevel] = useState<number>(0);
 
 
-  useEffect(() => {
+  useEffect(() => { // register onSnapshot that monitors firestore for new calls
     const unsubscribe = onSnapshot(
         query(collection(db, 'calls'),
         where("lastSeen", ">=", Timestamp.fromDate(new Date((Date.now()-lastSeenAllowance)))
@@ -310,7 +310,7 @@ export function Broadcast() {
     return () => unsubscribe();  // Clean up subscription
   
   }, []);
-  useEffect(() => {
+  useEffect(() => { // fetch devices
     fetchDevices().then((devices) => {
       if (devices) {
         devices.forEach((device) => {
@@ -326,7 +326,45 @@ export function Broadcast() {
       }
     });
   }, []);
+  useEffect(() => { // draw audio input level
 
+    if (localStream) {
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(localStream);
+      const analyser = audioContext.createAnalyser();
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      source.connect(analyser);
+
+      const draw = () => {
+        analyser.getByteFrequencyData(dataArray);
+
+        // Calculate the audio level
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          sum += dataArray[i];
+        }
+        const average = sum / dataArray.length;
+        setAudioInputLevel(average);
+      };
+
+      const intervalId = setInterval(() => {
+        draw();
+      }, 100);
+
+      return () => {
+        // Cleanup
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
+        audioContext.close();
+      };
+    }
+  }, [localStream]);
+  useEffect(() => { // re-init media
+    initMedia();
+  }, [audioInput, audioOutput, videoInput, audioOnly]);
+  
   const initMedia = async () => {
 
     if (localStream) {
@@ -339,9 +377,9 @@ export function Broadcast() {
         noiseSuppression: false,
         autoGainControl: false,
         sampleSize: 16,
-        deviceId: audioInput ? { exact: audioInput.value } : undefined
+        deviceId: audioInput.value ? { exact: audioInput.value } : undefined
       },
-      video: !audioOnly ? false : { deviceId: videoInput ? { exact: videoInput.value } : undefined },
+      video: !audioOnly ? false : { deviceId: videoInput.value ? { exact: videoInput.value } : undefined },
     };
 
     let localStreamObject = null;
@@ -354,32 +392,6 @@ export function Broadcast() {
       myWebcam.play().catch((error) => {console.log(error)});
     } catch (error) {
       console.error(error);
-    }
-
-    // display audio level
-    if (localStreamObject) {
-      const audioContext = new AudioContext();
-      const source = audioContext.createMediaStreamSource(localStreamObject);
-      const analyser = audioContext.createAnalyser();
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-      source.connect(analyser);
-
-      const draw = () => {
-        analyser.getByteFrequencyData(dataArray);
-        console.log("drawing");
-        // Calculate the audio level
-        let sum = 0;
-        for (let i = 0; i < dataArray.length; i++) {
-        sum += dataArray[i];
-        }
-        const average = sum / dataArray.length;
-
-        setAudioInputLevel(average);
-          
-      }
-      
-      setInterval(() => {draw()}, 100)
     }
   }
   const onValueChange = (value: string, type: string) => {
@@ -401,6 +413,7 @@ export function Broadcast() {
         setVideoInput(correspondingObject);
       }
     }
+    
   };
   const fetchDevices = async () => {
     try {
@@ -414,7 +427,6 @@ export function Broadcast() {
   return (
       <>
       <Progress value={audioInputLevel} className="w-[60%]"/>
-      <video id="my-webcam" />
       <div className="flex gap-2">
       <Dialog>
       <DialogTrigger asChild>
@@ -511,6 +523,7 @@ export function Broadcast() {
       </Dialog>
       <Button onClick={() => {initMedia()}}>initProcess!</Button>
       </div>
+      <video id="my-webcam" />
       {localStream && callIds.map(callId => (
       <StreamToAudience key={callId} localStream={localStream} callId={callId} />
     ))}
@@ -538,145 +551,144 @@ export function Webcall() {
 
 
 
-const VideoSettings = () => {
-  const [audioInput, setAudioInput] =     useState<{label: string, value: string | undefined}>({label: "System Default", value: undefined});
-  const [audioOutput, setAudioOutput] =   useState<{label: string, value: string | undefined}>({label: "System Default", value: undefined});
-  const [videoInput, setVideoInput] =     useState<{label: string, value: string | undefined}>({label: "System Default", value: undefined});
-  const [audioInputs, setAudioInputs] =   useState<{label: string, value: string }[]>([]);
-  const [audioOutputs, setAudioOutputs] = useState<{label: string, value: string }[]>([]);
-  const [videoInputs, setVideoInputs] =   useState<{label: string, value: string }[]>([]);
-  const [stream, setStream] = useState(null);
-  const videoElement = useRef(null);
+// const VideoSettings = () => {
+//   const [audioInput, setAudioInput] =     useState<{label: string, value: string | undefined}>({label: "System Default", value: undefined});
+//   const [audioOutput, setAudioOutput] =   useState<{label: string, value: string | undefined}>({label: "System Default", value: undefined});
+//   const [videoInput, setVideoInput] =     useState<{label: string, value: string | undefined}>({label: "System Default", value: undefined});
+//   const [audioInputs, setAudioInputs] =   useState<{label: string, value: string }[]>([]);
+//   const [audioOutputs, setAudioOutputs] = useState<{label: string, value: string }[]>([]);
+//   const [videoInputs, setVideoInputs] =   useState<{label: string, value: string }[]>([]);
+//   const [stream, setStream] = useState(null);
+//   const videoElement = useRef(null);
 
-  const attachSinkId = async (element, sinkId) => {
-    if (typeof element.sinkId !== "undefined") {
-      try {
-        await element.setSinkId(sinkId);
-        console.log(`Success, audio output device attached: ${sinkId}`);
-      } catch (error) {
-        let errorMessage = error;
-        if (error.name === "SecurityError") {
-          errorMessage = `You need to use HTTPS for selecting audio output device: ${error}`;
-        }
-        console.error(errorMessage);
-        setAudioOutput(""); // Set back to default
-      }
-    } else {
-      console.warn("Browser does not support output device selection.");
-    }
-  };
+//   const attachSinkId = async (element, sinkId) => {
+//     if (typeof element.sinkId !== "undefined") {
+//       try {
+//         await element.setSinkId(sinkId);
+//         console.log(`Success, audio output device attached: ${sinkId}`);
+//       } catch (error) {
+//         let errorMessage = error;
+//         if (error.name === "SecurityError") {
+//           errorMessage = `You need to use HTTPS for selecting audio output device: ${error}`;
+//         }
+//         console.error(errorMessage);
+//         setAudioOutput(""); // Set back to default
+//       }
+//     } else {
+//       console.warn("Browser does not support output device selection.");
+//     }
+//   };
 
-  const fetchDevices = async () => {
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      return devices;
-    } catch (error) {
-      console.error(error);
-    }
-  };
+//   const fetchDevices = async () => {
+//     try {
+//       const devices = await navigator.mediaDevices.enumerateDevices();
+//       return devices;
+//     } catch (error) {
+//       console.error(error);
+//     }
+//   };
 
-  const gotStream = (newStream) => {
-    setStream(newStream);
-    videoElement.current.srcObject = newStream;
-    return fetchDevices();
-  };
+//   const gotStream = (newStream) => {
+//     setStream(newStream);
+//     videoElement.current.srcObject = newStream;
+//     return fetchDevices();
+//   };
 
-  const start = async () => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-    }
-    const constraints = {
-      audio: { deviceId: audioInput ? { exact: audioInput } : undefined },
-      video: { deviceId: videoInput ? { exact: videoInput } : undefined },
-    };
+//   const start = async () => {
+//     if (stream) {
+//       stream.getTracks().forEach((track) => track.stop());
+//     }
+//     const constraints = {
+//       audio: { deviceId: audioInput ? { exact: audioInput } : undefined },
+//       video: { deviceId: videoInput ? { exact: videoInput } : undefined },
+//     };
 
-    try {
-      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-      gotStream(newStream);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+//     try {
+//       const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+//       gotStream(newStream);
+//     } catch (error) {
+//       console.error(error);
+//     }
+//   };
 
-  useEffect(() => {
-  fetchDevices().then((devices) => {
+//   useEffect(() => {
+//   fetchDevices().then((devices) => {
 
-    if (devices) {
-      devices.forEach((device) => {
-        const option = { label: device.label, value: device.deviceId };
-        if (device.kind === "audioinput") {
-          setAudioInputs((prevOptions) => [...prevOptions, option]);
-        } else if (device.kind === "audiooutput") {
-          setAudioOutputs((prevOptions) => [...prevOptions, option]);
-        } else if (device.kind === "videoinput") {
-          setVideoInputs((prevOptions) => [...prevOptions, option]);
-        }
-      });
-    }
-  });
-  start();
-}, []);
+//     if (devices) {
+//       devices.forEach((device) => {
+//         const option = { label: device.label, value: device.deviceId };
+//         if (device.kind === "audioinput") {
+//           setAudioInputs((prevOptions) => [...prevOptions, option]);
+//         } else if (device.kind === "audiooutput") {
+//           setAudioOutputs((prevOptions) => [...prevOptions, option]);
+//         } else if (device.kind === "videoinput") {
+//           setVideoInputs((prevOptions) => [...prevOptions, option]);
+//         }
+//       });
+//     }
+//   });
+//   start();
+// }, []);
 
 
-  useEffect(() => {
-    if (audioOutput && videoElement.current) {
-      attachSinkId(videoElement.current, audioOutput);
-    }
-  }, [audioOutput]);
+//   useEffect(() => {
+//     if (audioOutput && videoElement.current) {
+//       attachSinkId(videoElement.current, audioOutput);
+//     }
+//   }, [audioOutput]);
 
-  const onValueChange = (value: string, type: string) => {
-    if (type === "audioInput") {
-      setAudioInput(value);
-    } else if (type === "audioOutput") {
-      setAudioOutput(value);
-    } else if (type === "videoInput") {
-      setVideoInput(value);
-    }
-  };
+//   const onValueChange = (value: string, type: string) => {
+//     if (type === "audioInput") {
+//       setAudioInput(value);
+//     } else if (type === "audioOutput") {
+//       setAudioOutput(value);
+//     } else if (type === "videoInput") {
+//       setVideoInput(value);
+//     }
+//   };
 
-  return (
+//   return (
     
-    <div className="p-4 flex gap-2">
-      <Select onValueChange={(value) => {onValueChange(value, "audioInput")}}>
-        <SelectTrigger className="w-[260px]">
-          <SelectValue placeholder="System Default" />
-        </SelectTrigger>
-        <SelectContent>
-        {audioInputs.map((option, index) => (
-          <SelectItem key={index} value={option.value}>
-            {option.label}
-          </SelectItem>
-        ))}
-        </SelectContent>
-      </Select>
-      <Select onValueChange={(value) => {onValueChange(value, "audioOutput")}}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="System Default" />
-        </SelectTrigger>
-        <SelectContent>
-        {audioOutputs.map((option, index) => (
-          <SelectItem key={index} value={option.value}>
-            {option.label}
-          </SelectItem>
-        ))}
-        </SelectContent>
-      </Select>
-      <Select onValueChange={(value) => {onValueChange(value, "videoInput")}}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="System Default" />
-        </SelectTrigger>
-        <SelectContent>
-        {videoInputs.map((option, index) => (
-          <SelectItem key={index} value={option.value}>
-            {option.label}
-          </SelectItem>
-        ))}
-        </SelectContent>
-      </Select>
-      <video className="m-4" autoPlay />
-    </div>
-  );
-};
+//     <div className="p-4 flex gap-2">
+//       <Select onValueChange={(value) => {onValueChange(value, "audioInput")}}>
+//         <SelectTrigger className="w-[260px]">
+//           <SelectValue placeholder="System Default" />
+//         </SelectTrigger>
+//         <SelectContent>
+//         {audioInputs.map((option, index) => (
+//           <SelectItem key={index} value={option.value}>
+//             {option.label}
+//           </SelectItem>
+//         ))}
+//         </SelectContent>
+//       </Select>
+//       <Select onValueChange={(value) => {onValueChange(value, "audioOutput")}}>
+//         <SelectTrigger className="w-[180px]">
+//           <SelectValue placeholder="System Default" />
+//         </SelectTrigger>
+//         <SelectContent>
+//         {audioOutputs.map((option, index) => (
+//           <SelectItem key={index} value={option.value}>
+//             {option.label}
+//           </SelectItem>
+//         ))}
+//         </SelectContent>
+//       </Select>
+//       <Select onValueChange={(value) => {onValueChange(value, "videoInput")}}>
+//         <SelectTrigger className="w-[180px]">
+//           <SelectValue placeholder="System Default" />
+//         </SelectTrigger>
+//         <SelectContent>
+//         {videoInputs.map((option, index) => (
+//           <SelectItem key={index} value={option.value}>
+//             {option.label}
+//           </SelectItem>
+//         ))}
+//         </SelectContent>
+//       </Select>
+//       <video className="m-4" autoPlay />
+//     </div>
+//   );
+// };
 
-export default VideoSettings;
-
+// export default VideoSettings;
