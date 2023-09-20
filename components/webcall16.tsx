@@ -543,8 +543,8 @@ export function Webcall() {
     const { user, role } = useContext(AppContext)
     return (
         <>
-            {/* {user && role == "admin" ? <Broadcast /> : <AttendBroadcast />} */}
-            <Broadcast />
+            {user && role == "admin" ? <Broadcast /> : <AttendBroadcast />}
+            {/* <Broadcast /> */}
         </>
     )
 }
