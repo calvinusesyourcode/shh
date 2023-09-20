@@ -523,7 +523,7 @@ export function Broadcast() {
       </Dialog>
       <Button onClick={() => {initMedia()}}>initProcess!</Button>
       </div>
-      <video id="my-webcam" />
+      <video id="my-webcam" muted />
       {localStream && callIds.map(callId => (
       <StreamToAudience key={callId} localStream={localStream} callId={callId} />
     ))}
