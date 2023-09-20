@@ -1,0 +1,682 @@
+'use client';
+
+import { Button, buttonVariants } from "@/components/ui/button"
+import { AppContext } from "@/lib/context";
+import { db } from "@/lib/firebase";
+import {
+    collection,
+    doc,
+    setDoc,
+    onSnapshot,
+    getDoc,
+    updateDoc,
+    where,
+    addDoc,
+    serverTimestamp,
+    query,
+    Timestamp
+} from "firebase/firestore";
+import { useContext, useEffect, useState, useRef } from "react";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+  } from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Progress } from "@/components/ui/progress";
+import { Close } from "@radix-ui/react-dialog";
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch";
+
+
+export function StreamToAudience({ localStream, callId }: { localStream: any; callId: string }) {
+    useEffect(() => {
+      let pc: any = null;
+      let remoteStream: MediaStream | null = null;
+  
+      const joinCall = async () => {
+        const response = await fetch(`https://piano.metered.live/api/v1/turn/credentials?apiKey=${process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY}`);
+        const stunAndTurnServers = await response.json();
+        const servers = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };
+  
+        pc = new RTCPeerConnection(servers);
+        remoteStream = new MediaStream();
+  
+        // Add tracks
+        localStream.getTracks().forEach((track: any) => {
+          pc.addTrack(track, localStream);
+        });
+  
+        // Handle onTrack
+        pc.ontrack = (e: any) => {
+          e.streams[0].getTracks().forEach((track: any) => {
+            if (remoteStream) {
+              remoteStream.addTrack(track);
+            }
+          });
+        };
+  
+        if (!callId) {
+          console.error('callId not found');
+          return;
+        }
+  
+        const callDoc = doc(collection(db, 'calls'), callId);
+        const answerCandidates = collection(callDoc, 'answerCandidates');
+        const offerCandidates = collection(callDoc, 'offerCandidates');
+  
+        pc.onicecandidate = async (event: any) => {
+          if (event.candidate) {
+            await setDoc(doc(answerCandidates), { ...event.candidate.toJSON() });
+          }
+        };
+        
+        
+
+        const callData: any = (await getDoc(callDoc)).data();
+        const offerDescription = callData.offer;
+        await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
+  
+        const answerDescription = await pc.createAnswer();
+        await pc.setLocalDescription(answerDescription);
+  
+        const answer = {
+          type: answerDescription.type,
+          sdp: answerDescription.sdp,
+        };
+  
+        await updateDoc(callDoc, { answer });
+  
+        const unsubscribe = onSnapshot(offerCandidates, (snapshot) => {
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'added') {
+              const data = change.doc.data();
+              pc.addIceCandidate(new RTCIceCandidate(data));
+            }
+          });
+        });
+  
+        // Cleanup on unmount
+        return () => {
+          unsubscribe();
+          if (pc) {
+            pc.close();
+          }
+        };
+      };
+  
+      joinCall();
+  
+    }, [localStream, callId]);  // Run effect only when localStream or callId changes
+  
+    return (
+      <>
+        <p>v0.0000001</p>
+        <div className="flex flex-row gap-4">
+          <video id="my-webcam" controls></video>
+          <video id="their-webcam" controls></video>
+        </div>
+      </>
+    );
+}
+export function ConnectToBroadcast() {
+    const [isCallStarted, setCallStarted] = useState(false);
+    let pc: any = null;
+    let localStream: any = null;
+    let remoteStream: any = null;
+    let unsubscribeDoc: any = null;
+    let unsubscribeCandidates: any = null;
+  
+    const startCall = async () => {
+        setCallStarted(true)
+        const response = await fetch(`https://piano.metered.live/api/v1/turn/credentials?apiKey=${process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY}`);
+        const stunAndTurnServers = await response.json();
+        const servers = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };
+  
+        pc = new RTCPeerConnection(servers);
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        remoteStream = new MediaStream();
+  
+        localStream.getTracks().forEach((track: any) => {
+          pc.addTrack(track, localStream);
+        });
+        
+        const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
+        myWebcam.srcObject = localStream;
+        myWebcam.play().catch(error => {console.error(error)});
+
+        pc.ontrack = (e: any) => {
+          e.streams[0].getTracks().forEach((track: any) => {
+            remoteStream?.addTrack(track);
+          });
+        };
+  
+        const callDoc = collection(db, 'calls');
+        const callId = (await addDoc(callDoc, {})).id;
+  
+        await updateDoc(doc(callDoc, 'newCalls'), { [callId]: { createdAt: serverTimestamp(), callId } });
+  
+        const offerCandidates = collection(doc(callDoc, callId), 'offerCandidates');
+        const answerCandidates = collection(doc(callDoc, callId), 'answerCandidates');
+  
+        pc.onicecandidate = async (event: any) => {
+          if (event.candidate) {
+            await setDoc(doc(offerCandidates), { ...event.candidate.toJSON() });
+          }
+        };
+  
+        const offerDescription = await pc.createOffer();
+        await pc.setLocalDescription(offerDescription);
+        await updateDoc(doc(callDoc, callId), { createdAt: serverTimestamp(), lastSeen: serverTimestamp(), offer: { sdp: offerDescription.sdp, type: offerDescription.type } });
+  
+        unsubscribeDoc = onSnapshot(doc(callDoc, callId), (snapshot) => {
+          const data = snapshot.data();
+          if (!pc?.currentRemoteDescription && data?.answer) {
+            const answerDescription = new RTCSessionDescription(data.answer);
+            pc?.setRemoteDescription(answerDescription);
+          }
+        });
+  
+        unsubscribeCandidates = onSnapshot(answerCandidates, (snapshot) => {
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'added') {
+              const candidate = new RTCIceCandidate(change.doc.data());
+              pc?.addIceCandidate(candidate);
+            }
+          });
+        });
+  
+        setInterval(async () => {
+          if (callId) {
+            await updateDoc(doc(callDoc, callId), { lastSeen: serverTimestamp() });
+          }
+        }, 120000);
+
+        const theirWebcam: HTMLVideoElement = document.getElementById("their-webcam") as HTMLVideoElement;
+        theirWebcam.srcObject = remoteStream;
+        theirWebcam.play().catch(error => {console.error(error)});
+      };
+  
+    const endCall = () => {
+      setCallStarted(false);
+      unsubscribeDoc && unsubscribeDoc();
+      unsubscribeCandidates && unsubscribeCandidates();
+      pc?.close();
+      pc = null;
+      localStream = null;
+      remoteStream = null;
+    };
+  
+    useEffect(() => {
+      return () => {
+        endCall();
+      };
+    }, []);
+  
+    return (
+      <>
+        <p>v0.0000001</p>
+        <div className="flex gap-2">
+        {isCallStarted
+        ? <Button onClick={() => endCall()} variant={"destructive"}>Disconnect</Button>
+        : <Button onClick={() => startCall()} disabled={isCallStarted}>Connect</Button>
+        }
+        <Dialog>
+        <DialogTrigger asChild>
+            <Button variant="outline">Info</Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+            <p>A library this beautiful deserves some accompaniment!</p>
+            <p>If only there were a way to hear the virtuosos play that upright piano, in real-time, from anywhere in the building...</p>
+            <p><b>shhh</b>: the world&apos;s quietest live music app.</p>
+            <p>A free, open-source, peer-to-peer streaming app by calvin.art.<sup>1</sup></p>
+            <p>For more, check out the source code on <a href="https://github.com/calvinusesyourcode/webrtc-2" target="_blank" rel="noopener noreferrer"><u>github</u></a> or see my blog post to learn how it all works!</p>
+            <DialogFooter>
+            <p className="text-xs"><sup>1</sup> Help keep this app free by donating!</p>
+            </DialogFooter>
+        </DialogContent>
+        </Dialog>
+
+
+        </div>
+        <div className="flex flex-row gap-4">
+          <video id="my-webcam" controls />
+          <video id="their-webcam" controls />
+        </div>
+      </>
+    );
+  }
+
+export function Broadcast() {
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null)
+  const [callIds, setCallIds] = useState<string[]>([])
+  const lastSeenAllowance = 5 * 60 * 1000
+  const [audioOnly, setAudioOnly] = useState(true);
+  const [audioOutputEnabled, setAudioOutputEnabled] = useState(false);
+  const [anon, setAnon] = useState(true);
+  const [announce, setAnnounce] = useState(true)
+  // stream settings
+  const [audioInput, setAudioInput] =     useState<{label: string, value: string | undefined}>({label: "System Default", value: undefined});
+  const [audioOutput, setAudioOutput] =   useState<{label: string, value: string | undefined}>({label: "System Default", value: undefined});
+  const [videoInput, setVideoInput] =     useState<{label: string, value: string | undefined}>({label: "System Default", value: undefined});
+  const [audioInputs, setAudioInputs] =   useState<{label: string, value: string}[]>([]);
+  const [audioOutputs, setAudioOutputs] = useState<{label: string, value: string}[]>([]);
+  const [videoInputs, setVideoInputs] =   useState<{label: string, value: string}[]>([]);
+  const [audioInputLevel, setAudioInputLevel] = useState<number>(0);
+
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+        query(collection(db, 'calls'),
+        where("lastSeen", ">=", Timestamp.fromDate(new Date((Date.now()-lastSeenAllowance)))
+        )), async (snapshot) => {
+      setCallIds(oldCallIds => {
+        let newCallIds = [...(oldCallIds || [])];
+        snapshot.docChanges().forEach((change) => {
+          const id = change.doc.id
+          if (id) {
+            if (change.type === "added") {
+              console.log("doc "+id+" added");
+              console.log(typeof change.doc.data().lastSeen, change.doc.data().lastSeen)
+              if (!newCallIds.includes(id)) {
+                newCallIds.push(id);
+              }
+            }
+            if (change.type === "modified") {
+            }
+            if (change.type === "removed") {
+              newCallIds = newCallIds.filter(call => call !== id);
+            }
+          }
+        });
+        console.log("newCallIds",newCallIds)
+        return newCallIds;
+      });
+    }, (error) => {
+      console.error("Error in onSnapshot(collection(db, 'calls'))::", error);
+    });
+
+    return () => unsubscribe();  // Clean up subscription
+  
+  }, []);
+  useEffect(() => {
+    fetchDevices().then((devices) => {
+      if (devices) {
+        devices.forEach((device) => {
+          const option = { label: device.label, value: device.deviceId };
+          if (device.kind === "audioinput") {
+            setAudioInputs((prevOptions) => [...prevOptions, option]);
+          } else if (device.kind === "audiooutput") {
+            setAudioOutputs((prevOptions) => [...prevOptions, option]);
+          } else if (device.kind === "videoinput") {
+            setVideoInputs((prevOptions) => [...prevOptions, option]);
+          }
+        });
+      }
+    });
+  }, []);
+
+  const initMedia = async () => {
+
+    if (localStream) {
+      localStream.getTracks().forEach((track) => track.stop());
+    }
+
+    const constraints = {
+      audio: {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false,
+        sampleSize: 16,
+        deviceId: audioInput ? { exact: audioInput.value } : undefined
+      },
+      video: !audioOnly ? false : { deviceId: videoInput ? { exact: videoInput.value } : undefined },
+    };
+
+    let localStreamObject = null;
+
+    try {
+      localStreamObject = await navigator.mediaDevices.getUserMedia(constraints);
+      setLocalStream(localStreamObject);
+      const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
+      myWebcam.srcObject = localStreamObject;
+      myWebcam.play().catch((error) => {console.log(error)});
+    } catch (error) {
+      console.error(error);
+    }
+
+    // display audio level
+    if (localStreamObject) {
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(localStreamObject);
+      const analyser = audioContext.createAnalyser();
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      source.connect(analyser);
+
+      const draw = () => {
+        analyser.getByteFrequencyData(dataArray);
+        console.log("drawing");
+        // Calculate the audio level
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+        sum += dataArray[i];
+        }
+        const average = sum / dataArray.length;
+
+        setAudioInputLevel(average);
+          
+      }
+      
+      setInterval(() => {draw()}, 100)
+    }
+  }
+  const onValueChange = (value: string, type: string) => {
+    let correspondingObject;
+  
+    if (type === "audioInput") {
+      correspondingObject = audioInputs.find(item => item.value === value);
+      if (correspondingObject) {
+        setAudioInput(correspondingObject);
+      }
+    } else if (type === "audioOutput") {
+      correspondingObject = audioOutputs.find(item => item.value === value);
+      if (correspondingObject) {
+        setAudioOutput(correspondingObject);
+      }
+    } else if (type === "videoInput") {
+      correspondingObject = videoInputs.find(item => item.value === value);
+      if (correspondingObject) {
+        setVideoInput(correspondingObject);
+      }
+    }
+  };
+  const fetchDevices = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      return devices;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return (
+      <>
+      <Progress value={audioInputLevel} className="w-[60%]"/>
+      <video id="my-webcam" />
+      <div className="flex gap-2">
+      <Dialog>
+      <DialogTrigger asChild>
+          <Button variant="outline">Settings</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+          <DialogTitle>Broadcast settings</DialogTitle>
+          <DialogDescription>
+              Don&apos;t forget to save your changes.
+          </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Select onValueChange={(value) => {onValueChange(value, "audioInput")}}>
+              <SelectTrigger className="w-[260px]">
+                <SelectValue placeholder={"hi"} />
+              </SelectTrigger>
+              <SelectContent>
+              {audioInputs.map((option, index) => (
+                <SelectItem key={index} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+              </SelectContent>
+            </Select>
+            {audioOutputEnabled && <Select onValueChange={(value) => {onValueChange(value, "audioOutput")}}>
+              <SelectTrigger className="w-[260px]">
+                <SelectValue placeholder={audioOutput.label} />
+              </SelectTrigger>
+              <SelectContent>
+              {audioOutputs.map((option, index) => (
+                <SelectItem key={index} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+              </SelectContent>
+            </Select>}
+            {!audioOnly && <Select onValueChange={(value) => {onValueChange(value, "videoInput")}}>
+              <SelectTrigger className="w-[260px]">
+                <SelectValue placeholder={videoInput.label} />
+              </SelectTrigger>
+              <SelectContent>
+              {videoInputs.map((option, index) => (
+                <SelectItem key={index} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+              </SelectContent>
+            </Select>}
+          </div>
+          <div className="grid gap-4 py-4">
+          <div className="flex items-center justify-end space-x-2">
+            <Label htmlFor="anonymous">Anonymous</Label>
+            <Switch
+              id="anonymous"
+              checked={anon}
+              onCheckedChange={() => setAnon(!anon)}
+            />
+          </div>
+          {!anon &&
+          <>
+          <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">Name</Label>
+              <Input id="name" value="Piano Wizard" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="bio" className="text-right">Bio</Label>
+              <Input id="bio" value="I like to play piano." className="col-span-3" />
+          </div>
+          </>
+          }
+          <div className="flex items-center justify-end space-x-2">
+            <Label htmlFor="announce">Announce Broadcast Start</Label>
+            <Switch
+              id="announce"
+              checked={announce}
+              onCheckedChange={() => {setAnnounce(!announce)}}
+            />
+          </div>
+          <div className="flex items-center justify-end space-x-2">
+            <Label htmlFor="audio-only" className="text-muted-foreground">Video Transmission </Label>
+            <Switch
+              id="audio-only"
+              checked={!audioOnly}
+            />
+          </div>
+          </div>
+          <DialogFooter>
+            <Close className={buttonVariants({variant: "default"})}>
+              Save changes
+            </Close>
+          </DialogFooter>
+      </DialogContent>
+      </Dialog>
+      <Button onClick={() => {initMedia()}}>initProcess!</Button>
+      </div>
+      {localStream && callIds.map(callId => (
+      <StreamToAudience key={callId} localStream={localStream} callId={callId} />
+    ))}
+      </>
+  )
+}
+
+export function AttendBroadcast() {
+    return (
+        <>
+        <ConnectToBroadcast />
+        </>
+    )
+}
+
+export function Webcall() {
+    const { user, role } = useContext(AppContext)
+    return (
+        <>
+            {/* {user && role == "admin" ? <Broadcast /> : <AttendBroadcast />} */}
+            <Broadcast />
+        </>
+    )
+}
+
+
+
+const VideoSettings = () => {
+  const [audioInput, setAudioInput] =     useState<{label: string, value: string | undefined}>({label: "System Default", value: undefined});
+  const [audioOutput, setAudioOutput] =   useState<{label: string, value: string | undefined}>({label: "System Default", value: undefined});
+  const [videoInput, setVideoInput] =     useState<{label: string, value: string | undefined}>({label: "System Default", value: undefined});
+  const [audioInputs, setAudioInputs] =   useState<{label: string, value: string }[]>([]);
+  const [audioOutputs, setAudioOutputs] = useState<{label: string, value: string }[]>([]);
+  const [videoInputs, setVideoInputs] =   useState<{label: string, value: string }[]>([]);
+  const [stream, setStream] = useState(null);
+  const videoElement = useRef(null);
+
+  const attachSinkId = async (element, sinkId) => {
+    if (typeof element.sinkId !== "undefined") {
+      try {
+        await element.setSinkId(sinkId);
+        console.log(`Success, audio output device attached: ${sinkId}`);
+      } catch (error) {
+        let errorMessage = error;
+        if (error.name === "SecurityError") {
+          errorMessage = `You need to use HTTPS for selecting audio output device: ${error}`;
+        }
+        console.error(errorMessage);
+        setAudioOutput(""); // Set back to default
+      }
+    } else {
+      console.warn("Browser does not support output device selection.");
+    }
+  };
+
+  const fetchDevices = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      return devices;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const gotStream = (newStream) => {
+    setStream(newStream);
+    videoElement.current.srcObject = newStream;
+    return fetchDevices();
+  };
+
+  const start = async () => {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+    }
+    const constraints = {
+      audio: { deviceId: audioInput ? { exact: audioInput } : undefined },
+      video: { deviceId: videoInput ? { exact: videoInput } : undefined },
+    };
+
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+      gotStream(newStream);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+  fetchDevices().then((devices) => {
+
+    if (devices) {
+      devices.forEach((device) => {
+        const option = { label: device.label, value: device.deviceId };
+        if (device.kind === "audioinput") {
+          setAudioInputs((prevOptions) => [...prevOptions, option]);
+        } else if (device.kind === "audiooutput") {
+          setAudioOutputs((prevOptions) => [...prevOptions, option]);
+        } else if (device.kind === "videoinput") {
+          setVideoInputs((prevOptions) => [...prevOptions, option]);
+        }
+      });
+    }
+  });
+  start();
+}, []);
+
+
+  useEffect(() => {
+    if (audioOutput && videoElement.current) {
+      attachSinkId(videoElement.current, audioOutput);
+    }
+  }, [audioOutput]);
+
+  const onValueChange = (value: string, type: string) => {
+    if (type === "audioInput") {
+      setAudioInput(value);
+    } else if (type === "audioOutput") {
+      setAudioOutput(value);
+    } else if (type === "videoInput") {
+      setVideoInput(value);
+    }
+  };
+
+  return (
+    
+    <div className="p-4 flex gap-2">
+      <Select onValueChange={(value) => {onValueChange(value, "audioInput")}}>
+        <SelectTrigger className="w-[260px]">
+          <SelectValue placeholder="System Default" />
+        </SelectTrigger>
+        <SelectContent>
+        {audioInputs.map((option, index) => (
+          <SelectItem key={index} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+        </SelectContent>
+      </Select>
+      <Select onValueChange={(value) => {onValueChange(value, "audioOutput")}}>
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="System Default" />
+        </SelectTrigger>
+        <SelectContent>
+        {audioOutputs.map((option, index) => (
+          <SelectItem key={index} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+        </SelectContent>
+      </Select>
+      <Select onValueChange={(value) => {onValueChange(value, "videoInput")}}>
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="System Default" />
+        </SelectTrigger>
+        <SelectContent>
+        {videoInputs.map((option, index) => (
+          <SelectItem key={index} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+        </SelectContent>
+      </Select>
+      <video className="m-4" autoPlay />
+    </div>
+  );
+};
+
+export default VideoSettings;
+

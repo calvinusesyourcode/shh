@@ -1,3 +1,11 @@
-more specific firestore rules
 make sure that when people disconnect it isnt somehow still using bandwidth
-video >> audio
+    more specific firestore rules
+    video >> audio
+    beautify /
+    implement "live now" feature
+    fork repo to ubc-specific repo
+    metatags
+    create additional metered accounts, add to vercel keys
+    fix disconnect button, make it delete the call doc
+    make tutorial for broadcasters, tell firestore once they've completed tutorial
+    detect audio levels

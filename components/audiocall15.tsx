@@ -297,11 +297,43 @@ export function Broadcast() {
     const initMedia = async () => {
         const localStreamObject = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
         setLocalStream(localStreamObject)
-    }
+
+        const audioContext = new AudioContext();
+        const source = audioContext.createMediaStreamSource(localStreamObject);
+        const analyser = audioContext.createAnalyser();
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+        source.connect(analyser);
+
+        function draw() {
+            analyser.getByteFrequencyData(dataArray);
+            
+            // Calculate the audio level
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+            sum += dataArray[i];
+            }
+            const average = sum / dataArray.length;
+
+            // Here you can set the height of your audio level bar
+            const audioBar = document.getElementById('audio-level-bar');
+            if (audioBar) {
+            audioBar.style.height = `${average}%`;
+            };
+            
+            requestAnimationFrame(draw);
+        }
+        
+        draw();
+        }
 
     return (
         <>
         <div className="flex gap-2">
+        <div id="audio-level-bar2" className="w-20">hi</div>
+        <div>
+            what
+        </div>
         <Dialog>
         <DialogTrigger asChild>
             <Button variant="outline">Settings</Button>
@@ -357,16 +389,13 @@ export function Broadcast() {
             </DialogFooter>
         </DialogContent>
         </Dialog>
-        <Button onClick={() => {initMedia()}}>initProcess</Button>
+        <Button onClick={() => {initMedia()}}>initProcess!</Button>
         </div>
         {localStream && callIds.map(callId => (
         <StreamToAudience key={callId} localStream={localStream} callId={callId} />
       ))}
         </>
     )
-
-
-
 }
 
 export function AttendBroadcast() {
