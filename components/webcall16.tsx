@@ -4,28 +4,28 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { AppContext } from "@/lib/context";
 import { db } from "@/lib/firebase";
 import {
-    collection,
-    doc,
-    setDoc,
-    onSnapshot,
-    getDoc,
-    updateDoc,
-    where,
-    addDoc,
-    serverTimestamp,
-    query,
-    Timestamp
+  collection,
+  doc,
+  setDoc,
+  onSnapshot,
+  getDoc,
+  updateDoc,
+  where,
+  addDoc,
+  serverTimestamp,
+  query,
+  Timestamp
 } from "firebase/firestore";
 import { useContext, useEffect, useState, useRef } from "react";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-  } from "@/components/ui/dialog"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   Select,
   SelectContent,
@@ -41,6 +41,8 @@ import { Switch } from "@/components/ui/switch";
 
 
 export function StreamToAudience({ localStream, callId }: { localStream: any; callId: string }) {
+  const [status, setStatus] = useState(null);
+  const [statusEvent, setStatusEvent] = useState(null);
     useEffect(() => {
       let pc: any = null;
       let remoteStream: MediaStream | null = null;
@@ -66,6 +68,11 @@ export function StreamToAudience({ localStream, callId }: { localStream: any; ca
             }
           });
         };
+
+        pc.onconnectionstatechange = (event: any) => {
+          setStatus(pc.connectionState);
+          console.log()
+        }
   
         if (!callId) {
           console.error('callId not found');
@@ -110,9 +117,7 @@ export function StreamToAudience({ localStream, callId }: { localStream: any; ca
         // Cleanup on unmount
         return () => {
           unsubscribe();
-          if (pc) {
-            pc.close();
-          }
+          if (pc) {pc.close()};
         };
       };
   
@@ -122,11 +127,12 @@ export function StreamToAudience({ localStream, callId }: { localStream: any; ca
   
     return (
       <>
-        <p>v0.0000001</p>
-        <div className="flex flex-row gap-4">
-          <video id="my-webcam" controls></video>
-          <video id="their-webcam" controls></video>
+      <div className={buttonVariants({variant: "outline"})}>
+        <div className="flex gap-2">
+          <p>{status}</p>
+          <p>{statusEvent}</p>
         </div>
+      </div>
       </>
     );
 }
@@ -256,7 +262,7 @@ export function ConnectToBroadcast() {
         </div>
       </>
     );
-  }
+}
 
 export function Broadcast() {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
@@ -524,9 +530,11 @@ export function Broadcast() {
       <Button onClick={() => {initMedia()}}>initProcess!</Button>
       </div>
       <video id="my-webcam" muted />
-      {localStream && callIds.map(callId => (
-      <StreamToAudience key={callId} localStream={localStream} callId={callId} />
-    ))}
+      <div className="flex gap-2">
+        {localStream && callIds.map(callId => (
+        <StreamToAudience key={callId} localStream={localStream} callId={callId} />
+      ))}
+      </div>
       </>
   )
 }

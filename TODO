@@ -1,4 +1,6 @@
 make sure that when people disconnect it isnt somehow still using bandwidth
+detect audio levels
+
     more specific firestore rules
     video >> audio
     beautify /
@@ -8,4 +10,4 @@ make sure that when people disconnect it isnt somehow still using bandwidth
     create additional metered accounts, add to vercel keys
     fix disconnect button, make it delete the call doc
     make tutorial for broadcasters, tell firestore once they've completed tutorial
-    detect audio levels
+    read audio level on attendee client
