@@ -376,7 +376,7 @@ export function Broadcast() {
         echoCancellation: false,
         noiseSuppression: false,
         autoGainControl: false,
-        sampleSize: 32,
+        sampleSize: 24,
         deviceId: audioInput.value ? { exact: audioInput.value } : undefined
       },
       video: !audioOnly ? false : { deviceId: videoInput.value ? { exact: videoInput.value } : undefined },
