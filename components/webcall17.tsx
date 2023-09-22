@@ -55,7 +55,7 @@ export function StreamToAudience({ localStream, callId }: { localStream: any; ca
 
       pc = new RTCPeerConnection(servers);
       remoteStream = new MediaStream();
-      setInterval(() => {console.log(pc)});
+      setInterval(() => {console.log(pc)}, 30000);
 
       // Add tracks
       localStream.getTracks().forEach((track: any) => {
