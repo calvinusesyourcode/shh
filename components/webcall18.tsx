@@ -131,7 +131,7 @@ export function StreamToAudience({ localStream, callId }: { localStream: any; ca
 }
 export function ConnectToBroadcast() {
     const [isCallStarted, setCallStarted] = useState(false);
-    const [status, setStatus] = useState(null);
+    const [status, setStatus] = useState("null");
     const [broadcastData, setBroadcastData] = useState<object>({});
     const [seenRecently, setSeenRecently] = useState(false);
     const [broadcasting, setBroadcasting] = useState<string>("unsure");
@@ -243,33 +243,33 @@ export function ConnectToBroadcast() {
   
     return (
         <>
+        <div className="flex gap-2">
+          <Dialog>
+          <DialogTrigger asChild>
+              <Button variant="outline">Info</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+              <p>A library this beautiful deserves some accompaniment!</p>
+              <p>If only there were a way to hear the virtuosos play that upright piano, in real-time, from anywhere in the building...</p>
+              <p><b>shhh</b>: the world&apos;s quietest live music app.</p>
+              <p>A free, open-source, peer-to-peer streaming app by calvin.art.<sup>1</sup></p>
+              <p>For more, check out the source code on <a href="https://github.com/calvinusesyourcode/webrtc-2" target="_blank" rel="noopener noreferrer"><u>github</u></a> or see my blog post to learn how it all works!</p>
+              <DialogFooter>
+              <p className="text-xs"><sup>1</sup> Help keep this app free by donating!</p>
+              </DialogFooter>
+          </DialogContent>
+          </Dialog>
+          { isCallStarted &&
+          <Button onClick={() => endCall()} variant={"destructive"}>Disconnect</Button>
+          }
+          { !isCallStarted && broadcasting == "yes" &&
+          <Button onClick={() => startCall()}>Connect</Button>
+          }
+        
+        </div>
         {broadcasting == "yes" ? (
             <>
         <div className="flex gap-2">
-        {isCallStarted && seenRecently
-        ? <Button onClick={() => endCall()} variant={"destructive"}>Disconnect</Button>
-        : <Button onClick={() => startCall()}>Connect</Button>
-        }
-        <Dialog>
-        <DialogTrigger asChild>
-            <Button variant="outline">Info</Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-            <p>A library this beautiful deserves some accompaniment!</p>
-            <p>If only there were a way to hear the virtuosos play that upright piano, in real-time, from anywhere in the building...</p>
-            <p><b>shhh</b>: the world&apos;s quietest live music app.</p>
-            <p>A free, open-source, peer-to-peer streaming app by calvin.art.<sup>1</sup></p>
-            <p>For more, check out the source code on <a href="https://github.com/calvinusesyourcode/webrtc-2" target="_blank" rel="noopener noreferrer"><u>github</u></a> or see my blog post to learn how it all works!</p>
-            <DialogFooter>
-            <p className="text-xs"><sup>1</sup> Help keep this app free by donating!</p>
-            </DialogFooter>
-        </DialogContent>
-        </Dialog>
-
-
-        </div>
-        <div className="flex flex-row gap-4">
-          {/* <video id="my-webcam" controls /> */}
           <audio id="audio-playback" controls />
           <p>status: {status}</p>
         </div>
