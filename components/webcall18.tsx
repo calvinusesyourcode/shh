@@ -132,7 +132,9 @@ export function StreamToAudience({ localStream, callId }: { localStream: any; ca
 }
 export function ConnectToBroadcast() {
     const [isCallStarted, setCallStarted] = useState(false);
+    const [status, setStatus] = useState(null);
     let pc: any = null;
+
     let localStream: any = null;
     let remoteStream: any = null;
     let unsubscribeDoc: any = null;
@@ -161,6 +163,10 @@ export function ConnectToBroadcast() {
             remoteStream?.addTrack(track);
           });
         };
+
+        pc.onconnectionstatechange = (event: any) => {
+            setStatus(pc.connectionState);
+        }
   
         const callDoc = collection(db, 'calls');
         const callId = (await addDoc(callDoc, {})).id;
@@ -203,7 +209,7 @@ export function ConnectToBroadcast() {
           }
         }, 120000);
 
-        const theirWebcam: HTMLVideoElement = document.getElementById("their-webcam") as HTMLVideoElement;
+        const theirWebcam: HTMLAudioElement = document.getElementById("audio-playback") as HTMLAudioElement;
         theirWebcam.srcObject = remoteStream;
         theirWebcam.play().catch(error => {console.error(error)});
       };
@@ -252,7 +258,8 @@ export function ConnectToBroadcast() {
         </div>
         <div className="flex flex-row gap-4">
           <video id="my-webcam" controls />
-          <video id="their-webcam" controls />
+          <audio id="audio-playback" controls />
+          <p>status: {status}</p>
         </div>
       </>
     );
