@@ -38,9 +38,11 @@ import { Close } from "@radix-ui/react-dialog";
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch";
+import { PcConnectionIcon } from "./pc-connection-icon";
 
 
 export function StreamToAudience({ localStream, callId }: { localStream: any; callId: string }) {
+    const [status, setStatus] = useState(null);
     useEffect(() => {
       let pc: any = null;
       let remoteStream: MediaStream | null = null;
@@ -122,11 +124,7 @@ export function StreamToAudience({ localStream, callId }: { localStream: any; ca
   
     return (
       <>
-        <p>v0.0000001</p>
-        <div className="flex flex-row gap-4">
-          <video id="my-webcam" controls></video>
-          <video id="their-webcam" controls></video>
-        </div>
+        {status && <PcConnectionIcon state={status} />}
       </>
     );
 }
@@ -232,11 +230,10 @@ export function ConnectToBroadcast() {
   
     return (
       <>
-        <p>v0.0000001</p>
         <div className="flex gap-2">
         {isCallStarted
         ? <Button onClick={() => endCall()} variant={"destructive"}>Disconnect</Button>
-        : <Button onClick={() => startCall()} disabled={isCallStarted}>Connect</Button>
+        : <Button onClick={() => startCall()}>Connect</Button>
         }
         <Dialog>
         <DialogTrigger asChild>
@@ -531,9 +528,12 @@ export function Broadcast() {
       <Button onClick={() => {initMedia()}}>initProcess!</Button>
       </div>
       <video id="my-webcam" muted />
+      <div className="flex gap-2">
+
       {localStream && callIds.map(callId => (
-      <StreamToAudience key={callId} localStream={localStream} callId={callId} />
-    ))}
+          <StreamToAudience key={callId} localStream={localStream} callId={callId} />
+          ))}
+    </div>
       </>
   )
 }

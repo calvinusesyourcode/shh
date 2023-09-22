@@ -4,8 +4,8 @@ import { Webcall } from "@/components/webcall18";
 
 export default function IndexPage() {
   return (
-    <section className="container grid items-center gap-6 pb-8 pt-6 md:py-10">
+    <div className="flex flex-col gap-2">
       <Webcall/>
-    </section>
+    </div>
   )
 }
