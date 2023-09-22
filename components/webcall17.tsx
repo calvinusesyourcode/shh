@@ -44,94 +44,90 @@ import { PcConnectionIcon } from "@/components/pc-connection-icon";
 export function StreamToAudience({ localStream, callId }: { localStream: any; callId: string }) {
   const [status, setStatus] = useState(null);
   const [statusEvent, setStatusEvent] = useState(null);
-    useEffect(() => {
-      let pc: any = null;
-      let remoteStream: MediaStream | null = null;
-  
-      const joinCall = async () => {
-        const response = await fetch(`https://piano.metered.live/api/v1/turn/credentials?apiKey=${process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY}`);
-        const stunAndTurnServers = await response.json();
-        const servers = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };
-  
-        pc = new RTCPeerConnection(servers);
-        remoteStream = new MediaStream();
-  
-        // Add tracks
-        localStream.getTracks().forEach((track: any) => {
-          pc.addTrack(track, localStream);
-        });
-  
-        // Handle onTrack
-        pc.ontrack = (e: any) => {
-          e.streams[0].getTracks().forEach((track: any) => {
-            if (remoteStream) {
-              remoteStream.addTrack(track);
-            }
-          });
-        };
+  useEffect(() => {
+    let pc: any = null;
+    let remoteStream: MediaStream | null = null;
 
-        pc.onconnectionstatechange = (event: any) => {
-          setStatus(pc.connectionState);
-          console.log()
-        }
-  
-        if (!callId) {
-          console.error('callId not found');
-          return;
-        }
-  
-        const callDoc = doc(collection(db, 'calls'), callId);
-        const answerCandidates = collection(callDoc, 'answerCandidates');
-        const offerCandidates = collection(callDoc, 'offerCandidates');
-  
-        pc.onicecandidate = async (event: any) => {
-          if (event.candidate) {
-            await setDoc(doc(answerCandidates), { ...event.candidate.toJSON() });
+    const joinCall = async () => {
+      const response = await fetch(`https://piano.metered.live/api/v1/turn/credentials?apiKey=${process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY}`);
+      const stunAndTurnServers = await response.json();
+      const servers = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };
+
+      pc = new RTCPeerConnection(servers);
+      remoteStream = new MediaStream();
+
+      // Add tracks
+      localStream.getTracks().forEach((track: any) => {
+        pc.addTrack(track, localStream);
+      });
+
+      // Handle onTrack
+      pc.ontrack = (e: any) => {
+        e.streams[0].getTracks().forEach((track: any) => {
+          if (remoteStream) {
+            remoteStream.addTrack(track);
           }
-        };
-
-        const callData: any = (await getDoc(callDoc)).data();
-        const offerDescription = callData.offer;
-        await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
-  
-        const answerDescription = await pc.createAnswer();
-        await pc.setLocalDescription(answerDescription);
-  
-        const answer = {
-          type: answerDescription.type,
-          sdp: answerDescription.sdp,
-        };
-  
-        await updateDoc(callDoc, { answer });
-  
-        const unsubscribe = onSnapshot(offerCandidates, (snapshot) => {
-          snapshot.docChanges().forEach((change) => {
-            if (change.type === 'added') {
-              const data = change.doc.data();
-              pc.addIceCandidate(new RTCIceCandidate(data));
-            }
-          });
         });
-        const shoutStatus = () => {console.log(status)}
-
-        setInterval(shoutStatus, 30000);
-  
-        // Cleanup on unmount
-        return () => {
-          unsubscribe();
-          if (pc) {pc.close()};
-        };
       };
-  
-      joinCall();
-  
-    }, [localStream, callId]);  // Run effect only when localStream or callId changes
+
+      pc.onconnectionstatechange = (event: any) => {
+        setStatus(pc.connectionState);
+        console.log("state: ", pc.connectionState);
+      }
+
+      if (!callId) {
+        console.error('callId not found');
+        return;
+      }
+
+      const callDoc = doc(collection(db, 'calls'), callId);
+      const answerCandidates = collection(callDoc, 'answerCandidates');
+      const offerCandidates = collection(callDoc, 'offerCandidates');
+
+      pc.onicecandidate = async (event: any) => {
+        if (event.candidate) {
+          await setDoc(doc(answerCandidates), { ...event.candidate.toJSON() });
+        }
+      };
+
+      const callData: any = (await getDoc(callDoc)).data();
+      const offerDescription = callData.offer;
+      await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
+
+      const answerDescription = await pc.createAnswer();
+      await pc.setLocalDescription(answerDescription);
+
+      const answer = {
+        type: answerDescription.type,
+        sdp: answerDescription.sdp,
+      };
+
+      await updateDoc(callDoc, { answer });
+
+      const unsubscribe = onSnapshot(offerCandidates, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'added') {
+            const data = change.doc.data();
+            pc.addIceCandidate(new RTCIceCandidate(data));
+          }
+        });
+      });
+
+      // Cleanup on unmount
+      return () => {
+        unsubscribe();
+        if (pc) {pc.close()};
+      };
+    };
+
+    joinCall();
+
+  }, [localStream, callId]);  // Run effect only when localStream or callId changes
   
     return (
       <>
-      {status && <div className={buttonVariants({variant: "outline"})}>
-        <PcConnectionIcon state={status} />
-        <p>{status}</p>
+      {<div className={buttonVariants({variant: "outline"})}>
+        <PcConnectionIcon state={status ? status : "null"} />
       </div>}
       </>
     );
@@ -150,6 +146,14 @@ export function ConnectToBroadcast() {
   
     const startCall = async () => {
         setCallStarted(true)
+
+        const updatePlaybackElement = () => {
+          if (playbackElement) {
+            if (audioOnly) setPlaybackElement(document.getElementById("audio-element") as HTMLAudioElement);
+            else setPlaybackElement(document.getElementById("video-element") as HTMLVideoElement);
+          }
+        }; updatePlaybackElement();
+
         const response = await fetch(`https://piano.metered.live/api/v1/turn/credentials?apiKey=${process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY}`);
         const stunAndTurnServers = await response.json();
         const servers = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };
@@ -157,7 +161,7 @@ export function ConnectToBroadcast() {
         pc = new RTCPeerConnection(servers);
         // localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         remoteStream = new MediaStream();
-  
+
         // localStream.getTracks().forEach((track: any) => {
         //   pc.addTrack(track, localStream);
         // });
@@ -222,12 +226,7 @@ export function ConnectToBroadcast() {
         }
     };
 
-    const updatePlaybackElement = () => {
-      if (playbackElement) {
-        if (audioOnly) setPlaybackElement(document.getElementById("audio-element") as HTMLAudioElement);
-        else setPlaybackElement(document.getElementById("video-element") as HTMLVideoElement);
-        }
-      }
+    
   
     const endCall = () => {
       setCallStarted(false);

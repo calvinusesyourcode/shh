@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Icons } from '@/components/icons';
 import { buttonVariants } from './ui/button';
 
-type ConnectionState = 'connecting' | 'connected';
+type ConnectionState = 'connecting' | 'connected' | 'null';
 
 export function PcConnectionIcon({ state }: { state: ConnectionState}) {
   const [currentSignalIcon, setCurrentSignalIcon] = useState('signal0');
@@ -12,6 +12,7 @@ export function PcConnectionIcon({ state }: { state: ConnectionState}) {
   const iconMapping: Record<ConnectionState, string> = {
     'connecting': currentSignalIcon,
     'connected': 'cast',
+    'null': 'error'
     // Add more states here
   };
 
