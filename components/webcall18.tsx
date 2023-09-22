@@ -227,7 +227,7 @@ export function ConnectToBroadcast() {
     const fetchBroadcastData = async () => {
         const callData: any = (await getDoc(doc(collection(db, 'calls'), "broadcast"))).data();
         setBroadcastData(callData);
-        console.log(callData?.lastSeen, typeof callData?.lastSeen)
+        console.log(callData?.lastSeen, typeof callData?.lastSeen);
     }
 
     useEffect(() => {
@@ -239,6 +239,7 @@ export function ConnectToBroadcast() {
   
     return (
       <>
+        <p>{JSON.stringify(broadcastData)}</p>
         <div className="flex gap-2">
         {isCallStarted && seenRecently
         ? <Button onClick={() => endCall()} variant={"destructive"}>Disconnect</Button>
@@ -263,7 +264,7 @@ export function ConnectToBroadcast() {
 
         </div>
         <div className="flex flex-row gap-4">
-          <video id="my-webcam" controls />
+          {/* <video id="my-webcam" controls /> */}
           <audio id="audio-playback" controls />
           <p>status: {status}</p>
         </div>
