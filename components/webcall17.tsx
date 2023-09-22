@@ -122,7 +122,7 @@ export function StreamToAudience({ localStream, callId }: { localStream: any; ca
 
     joinCall();
 
-  }, [localStream, callId]);  // Run effect only when localStream or callId changes
+  }, [localStream, callId]);
   
     return (
       <>
@@ -183,6 +183,7 @@ export function ConnectToBroadcast() {
   
         const callDoc = collection(db, 'calls');
         const callId = (await addDoc(callDoc, {})).id;
+        await updateDoc(doc(callDoc, 'newCalls'), { [callId]: { createdAt: serverTimestamp(), callId } });
   
         const offerCandidates = collection(doc(callDoc, callId), 'offerCandidates');
         const answerCandidates = collection(doc(callDoc, callId), 'answerCandidates');
