@@ -136,6 +136,8 @@ export function StreamToAudience({ localStream, callId }: { localStream: any; ca
 }
 export function ConnectToBroadcast() {
     const [isCallStarted, setCallStarted] = useState(false);
+    const [audioOnly, setAudioOnly] = useState(false);
+    const [playbackElement, setPlaybackElement] = useState<HTMLAudioElement | HTMLVideoElement | null>(null);
     let pc: any = null;
     let localStream: any = null;
     let remoteStream: any = null;
@@ -149,16 +151,16 @@ export function ConnectToBroadcast() {
         const servers = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };
   
         pc = new RTCPeerConnection(servers);
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        // localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         remoteStream = new MediaStream();
   
-        localStream.getTracks().forEach((track: any) => {
-          pc.addTrack(track, localStream);
-        });
+        // localStream.getTracks().forEach((track: any) => {
+        //   pc.addTrack(track, localStream);
+        // });
         
-        const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
-        myWebcam.srcObject = localStream;
-        myWebcam.play().catch(error => {console.error(error)});
+        // const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
+        // myWebcam.srcObject = localStream;
+        // myWebcam.play().catch(error => {console.error(error)});
 
         pc.ontrack = (e: any) => {
           e.streams[0].getTracks().forEach((track: any) => {
@@ -204,11 +206,19 @@ export function ConnectToBroadcast() {
             await updateDoc(doc(callDoc, callId), { lastSeen: serverTimestamp() });
           }
         }, 120000);
+        
+        if (playbackElement) {
+          playbackElement.srcObject = remoteStream;
+          playbackElement.play().catch(error => {console.error(error)});
+        }
+    };
 
-        const theirWebcam: HTMLVideoElement = document.getElementById("their-webcam") as HTMLVideoElement;
-        theirWebcam.srcObject = remoteStream;
-        theirWebcam.play().catch(error => {console.error(error)});
-      };
+    const updatePlaybackElement = () => {
+      if (playbackElement) {
+        if (audioOnly) setPlaybackElement(document.getElementById("audio-element") as HTMLAudioElement);
+        else setPlaybackElement(document.getElementById("video-element") as HTMLVideoElement);
+        }
+      }
   
     const endCall = () => {
       setCallStarted(false);
@@ -219,6 +229,8 @@ export function ConnectToBroadcast() {
       localStream = null;
       remoteStream = null;
     };
+
+
   
     useEffect(() => {
       return () => {
@@ -230,7 +242,7 @@ export function ConnectToBroadcast() {
       <>
         <p>v0.0000001</p>
         <div className="flex gap-2">
-        {isCallStarted
+        { isCallStarted
         ? <Button onClick={() => endCall()} variant={"destructive"}>Disconnect</Button>
         : <Button onClick={() => startCall()} disabled={isCallStarted}>Connect</Button>
         }
@@ -253,7 +265,10 @@ export function ConnectToBroadcast() {
 
         </div>
         <div className="flex flex-row gap-4">
-          <video id="their-webcam" controls />
+          { audioOnly
+          ? <audio id="audio-element" controls/>
+          : <video id="video-element" controls />
+          }
         </div>
       </>
     );
@@ -551,147 +566,3 @@ export function Webcall() {
         </>
     )
 }
-
-
-
-// const VideoSettings = () => {
-//   const [audioInput, setAudioInput] =     useState<{label: string, value: string | undefined}>({label: "System Default", value: undefined});
-//   const [audioOutput, setAudioOutput] =   useState<{label: string, value: string | undefined}>({label: "System Default", value: undefined});
-//   const [videoInput, setVideoInput] =     useState<{label: string, value: string | undefined}>({label: "System Default", value: undefined});
-//   const [audioInputs, setAudioInputs] =   useState<{label: string, value: string }[]>([]);
-//   const [audioOutputs, setAudioOutputs] = useState<{label: string, value: string }[]>([]);
-//   const [videoInputs, setVideoInputs] =   useState<{label: string, value: string }[]>([]);
-//   const [stream, setStream] = useState(null);
-//   const videoElement = useRef(null);
-
-//   const attachSinkId = async (element, sinkId) => {
-//     if (typeof element.sinkId !== "undefined") {
-//       try {
-//         await element.setSinkId(sinkId);
-//         console.log(`Success, audio output device attached: ${sinkId}`);
-//       } catch (error) {
-//         let errorMessage = error;
-//         if (error.name === "SecurityError") {
-//           errorMessage = `You need to use HTTPS for selecting audio output device: ${error}`;
-//         }
-//         console.error(errorMessage);
-//         setAudioOutput(""); // Set back to default
-//       }
-//     } else {
-//       console.warn("Browser does not support output device selection.");
-//     }
-//   };
-
-//   const fetchDevices = async () => {
-//     try {
-//       const devices = await navigator.mediaDevices.enumerateDevices();
-//       return devices;
-//     } catch (error) {
-//       console.error(error);
-//     }
-//   };
-
-//   const gotStream = (newStream) => {
-//     setStream(newStream);
-//     videoElement.current.srcObject = newStream;
-//     return fetchDevices();
-//   };
-
-//   const start = async () => {
-//     if (stream) {
-//       stream.getTracks().forEach((track) => track.stop());
-//     }
-//     const constraints = {
-//       audio: { deviceId: audioInput ? { exact: audioInput } : undefined },
-//       video: { deviceId: videoInput ? { exact: videoInput } : undefined },
-//     };
-
-//     try {
-//       const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-//       gotStream(newStream);
-//     } catch (error) {
-//       console.error(error);
-//     }
-//   };
-
-//   useEffect(() => {
-//   fetchDevices().then((devices) => {
-
-//     if (devices) {
-//       devices.forEach((device) => {
-//         const option = { label: device.label, value: device.deviceId };
-//         if (device.kind === "audioinput") {
-//           setAudioInputs((prevOptions) => [...prevOptions, option]);
-//         } else if (device.kind === "audiooutput") {
-//           setAudioOutputs((prevOptions) => [...prevOptions, option]);
-//         } else if (device.kind === "videoinput") {
-//           setVideoInputs((prevOptions) => [...prevOptions, option]);
-//         }
-//       });
-//     }
-//   });
-//   start();
-// }, []);
-
-
-//   useEffect(() => {
-//     if (audioOutput && videoElement.current) {
-//       attachSinkId(videoElement.current, audioOutput);
-//     }
-//   }, [audioOutput]);
-
-//   const onValueChange = (value: string, type: string) => {
-//     if (type === "audioInput") {
-//       setAudioInput(value);
-//     } else if (type === "audioOutput") {
-//       setAudioOutput(value);
-//     } else if (type === "videoInput") {
-//       setVideoInput(value);
-//     }
-//   };
-
-//   return (
-    
-//     <div className="p-4 flex gap-2">
-//       <Select onValueChange={(value) => {onValueChange(value, "audioInput")}}>
-//         <SelectTrigger className="w-[260px]">
-//           <SelectValue placeholder="System Default" />
-//         </SelectTrigger>
-//         <SelectContent>
-//         {audioInputs.map((option, index) => (
-//           <SelectItem key={index} value={option.value}>
-//             {option.label}
-//           </SelectItem>
-//         ))}
-//         </SelectContent>
-//       </Select>
-//       <Select onValueChange={(value) => {onValueChange(value, "audioOutput")}}>
-//         <SelectTrigger className="w-[180px]">
-//           <SelectValue placeholder="System Default" />
-//         </SelectTrigger>
-//         <SelectContent>
-//         {audioOutputs.map((option, index) => (
-//           <SelectItem key={index} value={option.value}>
-//             {option.label}
-//           </SelectItem>
-//         ))}
-//         </SelectContent>
-//       </Select>
-//       <Select onValueChange={(value) => {onValueChange(value, "videoInput")}}>
-//         <SelectTrigger className="w-[180px]">
-//           <SelectValue placeholder="System Default" />
-//         </SelectTrigger>
-//         <SelectContent>
-//         {videoInputs.map((option, index) => (
-//           <SelectItem key={index} value={option.value}>
-//             {option.label}
-//           </SelectItem>
-//         ))}
-//         </SelectContent>
-//       </Select>
-//       <video className="m-4" autoPlay />
-//     </div>
-//   );
-// };
-
-// export default VideoSettings;

@@ -79,3 +79,12 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+@layer components {
+  .title-mask {
+    width: 100%;
+    mask-image:url("/calvin-art-title.svg");
+    mask-size: 70%;
+    mask-repeat: no-repeat;
+  }
+}

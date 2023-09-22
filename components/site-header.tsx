@@ -8,15 +8,24 @@ import { AppContext } from "@/lib/context"
 import { useContext } from "react"
 import { auth, googleAuthProvider, db as firestore } from "@/lib/firebase";
 import { signInWithPopup } from "firebase/auth";
+import { Svg } from "@/components/svgs"
 
 export function SiteHeader() {
   const { user } = useContext(AppContext)
   return (
     <header className="bg-background sticky top-0 z-40 w-full border-b">
       <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
-      <span className="inline-block font-bold">{siteConfig.name}</span>
+      <div className="flex gap-2 items-end">
+      <Svg.piano3 width="43" height="43" className="mb-1"/>
+        <h1 className="font-extrabold text-5xl">shh</h1>
+        <div className="flex flex-col gap-0 mb-1">
+          <p className="font-bold text-sm text-muted-foreground">v0.069 by calvin.art</p>
+          <p className="font-bold text-sm text-muted-foreground">open-source peer-to-peer music streaming</p>
+        </div>
+      </div>
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-1">
+            
           { user ? <LoggedInScreen /> : <SignInButton /> }
             <Link
               href={siteConfig.links.github}

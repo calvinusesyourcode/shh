@@ -13,6 +13,16 @@ module.exports = {
       },
     },
     extend: {
+      utilities: {
+        '.mask-piano': {
+          '-webkit-mask-image': "url('piano5.png')",
+          'mask-image': "url('piano5.png')",
+          '-webkit-mask-size': '70%',
+          'mask-size': '70%',
+          '-webkit-mask-repeat': 'no-repeat',
+          'mask-repeat': 'no-repeat'
+        }
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
