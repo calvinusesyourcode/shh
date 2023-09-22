@@ -39,6 +39,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch";
 import { PcConnectionIcon } from "./pc-connection-icon";
+import Image from "next/image"
 
 
 export function StreamToAudience({ localStream, callId }: { localStream: any; callId: string }) {
@@ -133,6 +134,7 @@ export function ConnectToBroadcast() {
     const [status, setStatus] = useState(null);
     const [broadcastData, setBroadcastData] = useState<object>({});
     const [seenRecently, setSeenRecently] = useState(false);
+    const [broadcasting, setBroadcasting] = useState<string>("unsure");
     let pc: any = null;
 
     let localStream: any = null;
@@ -227,7 +229,9 @@ export function ConnectToBroadcast() {
     const fetchBroadcastData = async () => {
         const callData: any = (await getDoc(doc(collection(db, 'calls'), "broadcast"))).data();
         setBroadcastData(callData);
-        console.log(callData?.lastSeen, typeof callData?.lastSeen);
+        console.log(callData?.lastSeen.seconds, Math.round(Date.now() / 1000), Math.round(Date.now() / 1000) - callData?.lastSeen.seconds)
+        if (Math.round(Date.now() / 1000) - callData?.lastSeen.seconds < 7 * 60) setBroadcasting("yes")
+        else setBroadcasting("no");
     }
 
     useEffect(() => {
@@ -238,8 +242,9 @@ export function ConnectToBroadcast() {
     }, []);
   
     return (
-      <>
-        <p>{JSON.stringify(broadcastData)}</p>
+        <>
+        {broadcasting == "yes" ? (
+            <>
         <div className="flex gap-2">
         {isCallStarted && seenRecently
         ? <Button onClick={() => endCall()} variant={"destructive"}>Disconnect</Button>
@@ -268,9 +273,24 @@ export function ConnectToBroadcast() {
           <audio id="audio-playback" controls />
           <p>status: {status}</p>
         </div>
+        </>
+        ) : null}
+        {broadcasting == "unsure" ? (
+            <>
+            <p className="font-bold text-lg">checking for broadcast...</p>
+            <Image src="/pikachu.gif" height={100} width={100} alt="Will Smith wondering where everybody is" />
+            </>
+        ) : null}
+        {broadcasting == "no" ? (
+            <>
+            <p className="font-bold text-lg">nobody was home!</p>
+            <Image src="/will.gif" height={100} width={100} alt="Will Smith wondering where everybody is" />
+            </>
+        ) : null}
+        {/* <p>{JSON.stringify(broadcastData)}</p> */}
       </>
     );
-  }
+}
 
 export function Broadcast() {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
