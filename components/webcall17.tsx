@@ -38,7 +38,7 @@ import { Close } from "@radix-ui/react-dialog";
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch";
-import { PcConnectionIcon } from "./pc-connection-icon";
+import { PcConnectionIcon } from "@/components/pc-connection-icon";
 
 
 export function StreamToAudience({ localStream, callId }: { localStream: any; callId: string }) {
@@ -89,8 +89,6 @@ export function StreamToAudience({ localStream, callId }: { localStream: any; ca
             await setDoc(doc(answerCandidates), { ...event.candidate.toJSON() });
           }
         };
-        
-        
 
         const callData: any = (await getDoc(callDoc)).data();
         const offerDescription = callData.offer;
@@ -114,6 +112,9 @@ export function StreamToAudience({ localStream, callId }: { localStream: any; ca
             }
           });
         });
+        const shoutStatus = () => {console.log(status)}
+
+        setInterval(shoutStatus, 30000);
   
         // Cleanup on unmount
         return () => {
