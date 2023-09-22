@@ -131,6 +131,7 @@ export function StreamToAudience({ localStream, callId }: { localStream: any; ca
       <>
       {status && <div className={buttonVariants({variant: "outline"})}>
         <PcConnectionIcon state={status} />
+        <p>{status}</p>
       </div>}
       </>
     );
@@ -139,6 +140,8 @@ export function ConnectToBroadcast() {
     const [isCallStarted, setCallStarted] = useState(false);
     const [audioOnly, setAudioOnly] = useState(false);
     const [playbackElement, setPlaybackElement] = useState<HTMLAudioElement | HTMLVideoElement | null>(null);
+    const [status, setStatus] = useState(null);
+
     let pc: any = null;
     let localStream: any = null;
     let remoteStream: any = null;
@@ -168,6 +171,11 @@ export function ConnectToBroadcast() {
             remoteStream?.addTrack(track);
           });
         };
+
+        pc.onconnectionstatechange = (event: any) => {
+          setStatus(pc.connectionState);
+          console.log(pc.connectionState);
+        }
   
         const callDoc = collection(db, 'calls');
         const callId = (await addDoc(callDoc, {})).id;
