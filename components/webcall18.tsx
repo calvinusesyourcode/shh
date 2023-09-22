@@ -147,16 +147,16 @@ export function ConnectToBroadcast() {
         const servers = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };
   
         pc = new RTCPeerConnection(servers);
-        // localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         remoteStream = new MediaStream();
   
-        // localStream.getTracks().forEach((track: any) => {
-        //   pc.addTrack(track, localStream);
-        // });
+        localStream.getTracks().forEach((track: any) => {
+          pc.addTrack(track, localStream);
+        });
         
-        // const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
-        // myWebcam.srcObject = localStream;
-        // myWebcam.play().catch(error => {console.error(error)});
+        const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
+        myWebcam.srcObject = localStream;
+        myWebcam.play().catch(error => {console.error(error)});
 
         pc.ontrack = (e: any) => {
           e.streams[0].getTracks().forEach((track: any) => {
