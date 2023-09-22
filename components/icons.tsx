@@ -3,6 +3,12 @@ import {
   Moon,
   SunMedium,
   Twitter,
+  SignalZero,
+  SignalLow,
+  SignalMedium,
+  SignalHigh,
+  Signal,
+  Cast,
   type Icon as LucideIcon,
 } from "lucide-react"
 
@@ -12,6 +18,12 @@ export const Icons = {
   sun: SunMedium,
   moon: Moon,
   twitter: Twitter,
+  signal0: SignalZero,
+  signal1: SignalLow,
+  signal2: SignalMedium,
+  signal3: SignalHigh,
+  signal4: Signal,
+  cast: Cast,
   logo: (props: LucideProps) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {...props}>
       <path

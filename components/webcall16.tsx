@@ -38,6 +38,7 @@ import { Close } from "@radix-ui/react-dialog";
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch";
+import { PcConnectionIcon } from "./pc-connection-icon";
 
 
 export function StreamToAudience({ localStream, callId }: { localStream: any; callId: string }) {
@@ -127,12 +128,9 @@ export function StreamToAudience({ localStream, callId }: { localStream: any; ca
   
     return (
       <>
-      <div className={buttonVariants({variant: "outline"})}>
-        <div className="flex gap-2">
-          <p>{status}</p>
-          <p>{statusEvent}</p>
-        </div>
-      </div>
+      {status && <div className={buttonVariants({variant: "outline"})}>
+        <PcConnectionIcon state={status} />
+      </div>}
       </>
     );
 }
