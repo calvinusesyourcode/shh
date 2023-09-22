@@ -131,6 +131,8 @@ export function StreamToAudience({ localStream, callId }: { localStream: any; ca
 export function ConnectToBroadcast() {
     const [isCallStarted, setCallStarted] = useState(false);
     const [status, setStatus] = useState(null);
+    const [broadcastData, setBroadcastData] = useState<object>({});
+    const [seenRecently, setSeenRecently] = useState(false);
     let pc: any = null;
 
     let localStream: any = null;
@@ -221,8 +223,15 @@ export function ConnectToBroadcast() {
       localStream = null;
       remoteStream = null;
     };
-  
+    
+    const fetchBroadcastData = async () => {
+        const callData: any = (await getDoc(doc(collection(db, 'calls'), "broadcast"))).data();
+        setBroadcastData(callData);
+        console.log(callData?.lastSeen, typeof callData?.lastSeen)
+    }
+
     useEffect(() => {
+        fetchBroadcastData();
       return () => {
         endCall();
       };
@@ -231,7 +240,7 @@ export function ConnectToBroadcast() {
     return (
       <>
         <div className="flex gap-2">
-        {isCallStarted
+        {isCallStarted && seenRecently
         ? <Button onClick={() => endCall()} variant={"destructive"}>Disconnect</Button>
         : <Button onClick={() => startCall()}>Connect</Button>
         }
@@ -269,7 +278,8 @@ export function Broadcast() {
   const [audioOnly, setAudioOnly] = useState(true);
   const [audioOutputEnabled, setAudioOutputEnabled] = useState(false);
   const [anon, setAnon] = useState(true);
-  const [announce, setAnnounce] = useState(true)
+  const [announce, setAnnounce] = useState(true);
+  const [afkCheckTimerId, setAfkCheckTimerId] = useState<NodeJS.Timer | null>(null);
   // stream settings
   const [audioInput, setAudioInput] =     useState<{label: string, value: string | undefined}>({label: "System Default", value: undefined});
   const [audioOutput, setAudioOutput] =   useState<{label: string, value: string | undefined}>({label: "System Default", value: undefined});
@@ -278,7 +288,6 @@ export function Broadcast() {
   const [audioOutputs, setAudioOutputs] = useState<{label: string, value: string}[]>([]);
   const [videoInputs, setVideoInputs] =   useState<{label: string, value: string}[]>([]);
   const [audioInputLevel, setAudioInputLevel] = useState<number>(0);
-
 
   useEffect(() => { // register onSnapshot that monitors firestore for new calls
     const unsubscribe = onSnapshot(
@@ -397,6 +406,22 @@ export function Broadcast() {
     } catch (error) {
       console.error(error);
     }
+  }
+  const initProcess = async () => {
+    await initMedia();
+    updateDoc(doc(collection(db, 'calls'), 'broadcast'), {
+        lastSeen: serverTimestamp(),
+        audioOnly: audioOnly,
+        name: "anon",
+        description: "music is cool",
+    })
+    setAfkCheckTimerId(() => {
+        const intervalId = setInterval(() => {imStillHere()}, 5*60*1000)
+        return intervalId
+    })
+  }
+  const imStillHere = async () => {
+    if (callIds.length > 0) await updateDoc(doc(collection(db, 'calls'), 'broadcast'), {lastSeen: serverTimestamp()})
   }
   const onValueChange = (value: string, type: string) => {
     let correspondingObject;
@@ -525,7 +550,7 @@ export function Broadcast() {
           </DialogFooter>
       </DialogContent>
       </Dialog>
-      <Button onClick={() => {initMedia()}}>initProcess!</Button>
+      <Button onClick={() => {initProcess()}}>initProcess!</Button>
       </div>
       <video id="my-webcam" muted />
       <div className="flex gap-2">
