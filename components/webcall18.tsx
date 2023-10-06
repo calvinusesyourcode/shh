@@ -583,6 +583,7 @@ export function Broadcast() {
       {localStream && callIds.map(callId => (
           <StreamToAudience key={callId} localStream={localStream} callId={callId} />
           ))}
+      <p>{info}</p>
     </div>
       </>
   )
