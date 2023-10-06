@@ -85,8 +85,6 @@ export function StreamToAudience({ localStream, callId }: { localStream: any; ca
           }
         };
         
-        
-
         const callData: any = (await getDoc(callDoc)).data();
         const offerDescription = callData.offer;
         await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
@@ -594,10 +592,19 @@ export function AttendBroadcast() {
 
 export function Webcall() {
     const { user, role } = useContext(AppContext)
+    const [text1, setText1] = useState<string>("")
+    const [text2, setText2] = useState<string>("")
+
+    useEffect(() => {
+      setText1(JSON.stringify(navigator.userAgent))
+      setText2(JSON.stringify(/iPhone/i.test(navigator.userAgent)))
+    })
     return (
         <>
             {user && role == "admin" ? <Broadcast /> : <AttendBroadcast />}
             {/* <Broadcast /> */}
+            <p>{text1}</p>
+            <p>{text2}</p>
         </>
     )
 }
