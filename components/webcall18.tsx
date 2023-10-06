@@ -405,26 +405,32 @@ export function Broadcast() {
       localStream.getTracks().forEach((track) => track.stop());
     }
 
-    const constraints = {
+    let mediaDeviceConstraints = {}
+    try { mediaDeviceConstraints = await navigator.mediaDevices.getSupportedConstraints()
+    } catch (error) {console.error(error)}
+    
+    const constraints: any = {
       audio: {
         echoCancellation: false,
         noiseSuppression: false,
-        autoGainControl: true,
         sampleSize: 24,
         deviceId: audioInput.value ? { exact: audioInput.value } : undefined
       },
       video: !audioOnly ? false : { deviceId: videoInput.value ? { exact: videoInput.value } : undefined },
     };
 
+    if ("volume" in mediaDeviceConstraints) { constraints.audio.volume = { exact: 1.0 } }
+    else if ("autoGainControl" in mediaDeviceConstraints) { constraints.audio.autoGainControl = false }
+
+    setInfo((prevInfo) => {
+      return prevInfo + "\n" + JSON.stringify(mediaDeviceConstraints)
+    })
+
     let localStreamObject = null;
 
     try {
       localStreamObject = await navigator.mediaDevices.getUserMedia(constraints);
       setLocalStream(localStreamObject);
-      const myConstraints = await navigator.mediaDevices.getSupportedConstraints()
-      setInfo((prevInfo) => {
-        return prevInfo + "\n" + JSON.stringify(myConstraints)
-      })
       const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
       myWebcam.srcObject = localStreamObject;
       myWebcam.play().catch((error) => {console.log(error)});
