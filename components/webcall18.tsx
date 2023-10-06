@@ -307,6 +307,8 @@ export function Broadcast() {
   const [audioOutputs, setAudioOutputs] = useState<{label: string, value: string}[]>([]);
   const [videoInputs, setVideoInputs] =   useState<{label: string, value: string}[]>([]);
   const [audioInputLevel, setAudioInputLevel] = useState<number>(0);
+  // debug stream
+  const [info, setInfo] = useState<string>("")
 
   useEffect(() => { // register onSnapshot that monitors firestore for new calls
     const unsubscribe = onSnapshot(
@@ -358,41 +360,41 @@ export function Broadcast() {
       }
     });
   }, []);
-  useEffect(() => { // draw audio input level
+  // useEffect(() => { // draw audio input level
 
-    if (localStream) {
-      const audioContext = new AudioContext();
-      const source = audioContext.createMediaStreamSource(localStream);
-      const analyser = audioContext.createAnalyser();
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+  //   if (localStream) {
+  //     const audioContext = new AudioContext();
+  //     const source = audioContext.createMediaStreamSource(localStream);
+  //     const analyser = audioContext.createAnalyser();
+  //     const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-      source.connect(analyser);
+  //     source.connect(analyser);
 
-      const draw = () => {
-        analyser.getByteFrequencyData(dataArray);
+  //     const draw = () => {
+  //       analyser.getByteFrequencyData(dataArray);
 
-        // Calculate the audio level
-        let sum = 0;
-        for (let i = 0; i < dataArray.length; i++) {
-          sum += dataArray[i];
-        }
-        const average = sum / dataArray.length;
-        setAudioInputLevel(average);
-      };
+  //       // Calculate the audio level
+  //       let sum = 0;
+  //       for (let i = 0; i < dataArray.length; i++) {
+  //         sum += dataArray[i];
+  //       }
+  //       const average = sum / dataArray.length;
+  //       setAudioInputLevel(average);
+  //     };
 
-      const intervalId = setInterval(() => {
-        draw();
-      }, 100);
+  //     const intervalId = setInterval(() => {
+  //       draw();
+  //     }, 100);
 
-      return () => {
-        // Cleanup
-        if (intervalId) {
-          clearInterval(intervalId);
-        }
-        audioContext.close();
-      };
-    }
-  }, [localStream]);
+  //     return () => {
+  //       // Cleanup
+  //       if (intervalId) {
+  //         clearInterval(intervalId);
+  //       }
+  //       audioContext.close();
+  //     };
+  //   }
+  // }, [localStream]);
   useEffect(() => { // re-init media
     initMedia();
   }, [audioInput, audioOutput, videoInput, audioOnly]);
@@ -407,7 +409,7 @@ export function Broadcast() {
       audio: {
         echoCancellation: false,
         noiseSuppression: false,
-        autoGainControl: false,
+        autoGainControl: true,
         sampleSize: 24,
         deviceId: audioInput.value ? { exact: audioInput.value } : undefined
       },
@@ -419,6 +421,10 @@ export function Broadcast() {
     try {
       localStreamObject = await navigator.mediaDevices.getUserMedia(constraints);
       setLocalStream(localStreamObject);
+      const myConstraints = await navigator.mediaDevices.getSupportedConstraints()
+      setInfo((prevInfo) => {
+        return prevInfo + "\n" + JSON.stringify(myConstraints)
+      })
       const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
       myWebcam.srcObject = localStreamObject;
       myWebcam.play().catch((error) => {console.log(error)});
