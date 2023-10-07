@@ -560,12 +560,13 @@ export function ListenerCall({ broadcastId} : { broadcastId: string}) {
 
       pc = new RTCPeerConnection(servers);
       if (pc == null) { console.error("PeerConnection is null!") }
-      // localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: false });
+      localStream = new MediaStream();
       remoteStream = new MediaStream();
+      localStream.addTrack((new AudioContext()).createMediaStreamDestination().stream.getAudioTracks()[0]);
 
-      // localStream.getTracks().forEach((track: any) => {
-      //   pc.addTrack(track, localStream);
-      // });
+      localStream.getTracks().forEach((track: any) => {
+        pc.addTrack(track, localStream);
+      });
       
       // const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
       // myWebcam.srcObject = localStream;
