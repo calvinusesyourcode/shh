@@ -171,7 +171,7 @@ export function ConnectToBroadcast() {
         const callDoc = collection(db, 'calls');
         const callId = (await addDoc(callDoc, {})).id;
   
-        await updateDoc(doc(callDoc, 'newCalls'), { [callId]: { createdAt: serverTimestamp(), callId } });
+        // await updateDoc(doc(callDoc, 'newCalls'), { [callId]: { createdAt: serverTimestamp(), callId } });
   
         const offerCandidates = collection(doc(callDoc, callId), 'offerCandidates');
         const answerCandidates = collection(doc(callDoc, callId), 'answerCandidates');
@@ -276,7 +276,7 @@ export function ConnectToBroadcast() {
         {broadcasting == "unsure" ? (
             <>
             <p className="font-bold text-lg">checking for broadcast...</p>
-            <Image src="/pikachu.gif" height={100} width={100} alt="Will Smith wondering where everybody is" />
+            <Image src="/pikachu.gif" height={100} width={100} alt="Curious pikachu" />
             </>
         ) : null}
         {broadcasting == "no" ? (
@@ -406,7 +406,7 @@ export function Broadcast() {
     }
 
     let mediaDeviceConstraints = {}
-    try { mediaDeviceConstraints = await navigator.mediaDevices.getSupportedConstraints()
+    try { mediaDeviceConstraints = navigator.mediaDevices.getSupportedConstraints()
     } catch (error) {console.error(error)}
     
     const constraints: any = {
