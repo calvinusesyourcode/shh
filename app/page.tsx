@@ -1,6 +1,6 @@
 'use client';
 
-import { Webcall } from "@/components/webcall19";
+import { Webcall } from "@/components/webcall20";
 
 export default function IndexPage() {
   return (
