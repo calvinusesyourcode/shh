@@ -494,10 +494,9 @@ export function ListenerPanel() {
 
   return (
     <>
-    <p>hi</p>
     {!broadcastId && <div className="flex justify-start gap-3">
     {broadcastIds.map(id => (
-      <div className="rounded-lg border hover:bg-primary/20 hover:cursor-pointer data-[side=bottom]:zoom-in-90" onClick={() => {setBroadcastId(id); console.log("CLICK")}}>
+      <div className="rounded-lg border hover:bg-primary/20 hover:cursor-pointer animate-fade-in" onClick={() => {setBroadcastId(id); console.log("CLICK")}}>
         <BroadcastInfo id={id}/>
       </div>
     ))}
@@ -559,18 +558,13 @@ export function ListenerCall({ broadcastId} : { broadcastId: string}) {
       const servers = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };
 
       pc = new RTCPeerConnection(servers);
-      if (pc == null) { console.error("PeerConnection is null!") }
       localStream = new MediaStream();
       remoteStream = new MediaStream();
+      
       localStream.addTrack((new AudioContext()).createMediaStreamDestination().stream.getAudioTracks()[0]);
-
       localStream.getTracks().forEach((track: any) => {
         pc.addTrack(track, localStream);
       });
-      
-      // const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
-      // myWebcam.srcObject = localStream;
-      // myWebcam.play().catch(error => {console.error(error)});
 
       pc.ontrack = (e: any) => {
         e.streams[0].getTracks().forEach((track: any) => {
@@ -596,7 +590,7 @@ export function ListenerCall({ broadcastId} : { broadcastId: string}) {
         }
       };
 
-      const offerDescription = await pc.createOffer({iceRestart: true});
+      const offerDescription = await pc.createOffer();
       await pc.setLocalDescription(offerDescription);
       await updateDoc(doc(callDoc, callId), { createdAt: serverTimestamp(), lastSeen: serverTimestamp(), offer: { sdp: offerDescription.sdp, type: offerDescription.type } });
 
