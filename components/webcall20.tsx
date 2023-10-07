@@ -546,7 +546,7 @@ export function ListenerCall({ broadcastId} : { broadcastId: string}) {
   const [seenRecently, setSeenRecently] = useState(false);
   const [broadcasting, setBroadcasting] = useState<string>("unsure");
   
-  let pc: any = null;
+  let pc: RTCPeerConnection | null = null;
   let localStream: any = null;
   let remoteStream: any = null;
   let unsubscribeDoc: any = null;
@@ -559,6 +559,7 @@ export function ListenerCall({ broadcastId} : { broadcastId: string}) {
       const servers = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };
 
       pc = new RTCPeerConnection(servers);
+      if (pc == null) { console.error("PeerConnection is null!") }
       // localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: false });
       remoteStream = new MediaStream();
 
@@ -594,7 +595,7 @@ export function ListenerCall({ broadcastId} : { broadcastId: string}) {
         }
       };
 
-      const offerDescription = await pc.createOffer();
+      const offerDescription = await pc.createOffer({iceRestart: true});
       await pc.setLocalDescription(offerDescription);
       await updateDoc(doc(callDoc, callId), { createdAt: serverTimestamp(), lastSeen: serverTimestamp(), offer: { sdp: offerDescription.sdp, type: offerDescription.type } });
 
