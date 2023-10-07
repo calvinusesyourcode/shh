@@ -559,7 +559,7 @@ export function ListenerCall({ broadcastId} : { broadcastId: string}) {
       const servers = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };
 
       pc = new RTCPeerConnection(servers);
-      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: false });
       remoteStream = new MediaStream();
 
       localStream.getTracks().forEach((track: any) => {
@@ -704,7 +704,7 @@ export function ListenerCall({ broadcastId} : { broadcastId: string}) {
 
 export function Webcall() {
     const { user, role } = useContext(AppContext)
-    // })
+
     return (
         <>
             {(user && role == "admin") ? <BroadcasterPanel user={user}/> : <ListenerPanel />}
