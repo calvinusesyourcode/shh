@@ -57,12 +57,6 @@ export function BroadcasterPanel({ user }: { user: any }) {
   const audioMinimum = 2
   const afkCheckInterval = 20 * 60 * 1000
 
-  if (!user) {
-    user = {}
-    user.uid = "VrIvTvpkA7Rp89v0k0bzwcfg6P92"
-    user.displayName = "Calvin Ducharme"
-  }
-
   const [broadcasting, setBroadcasting] = useState<boolean>(false)
   const [starting, setStarting] = useState<boolean>(false)
   const [testing, setTesting] = useState<boolean>(false)
@@ -714,7 +708,7 @@ export function Webcall() {
     return (
         <>
             {(user && role == "admin") ? <BroadcasterPanel user={user}/> : <ListenerPanel />}
-            {/* <BroadcasterPanel user={null}/> */}
+            {/* <BroadcasterPanel user={{uid: "VrIvTvpkA7Rp89v0k0bzwcfg6P92", displayName: "Calvin"}}/> */}
         </>
     )
 }
