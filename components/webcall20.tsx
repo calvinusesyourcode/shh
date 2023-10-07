@@ -462,6 +462,7 @@ export function ListenerPanel() {
   const lastSeenAllowance = 40 * 60 * 1000
 
   useEffect(() => { // monitor firestore for new broadcasts
+    console.log("USE EFFECT")
     const unsubscribe = onSnapshot(
         query(collection(db, "broadcasts"),
         where("lastSeen", ">=", Timestamp.fromDate(new Date((Date.now() - lastSeenAllowance)))
@@ -495,43 +496,56 @@ export function ListenerPanel() {
         });
 
     return () => unsubscribe();
-  });
+  }, []);
 
   return (
     <>
     <p>hi</p>
-    {broadcastIds.map(id => {
-      <div onClick={() => setBroadcastId(id)}>
+    {!broadcastId && <div className="flex justify-start gap-3">
+    {broadcastIds.map(id => (
+      <div className="rounded-lg border hover:bg-primary/20 hover:cursor-pointer data-[side=bottom]:zoom-in-90" onClick={() => {setBroadcastId(id); console.log("CLICK")}}>
         <BroadcastInfo id={id}/>
       </div>
-    })}
-    {/* <ListenerCall broadcastDocRef={broadcastDocRef}/> */}
+    ))}
+    </div>
+    }
+    {broadcastId && <ListenerCall broadcastId={broadcastId}/> }
     </>
   )
 }
 export function BroadcastInfo({ id }: { id: string }) {
   const broadcastDocRef = doc(collection(db, "broadcasts"), id)
   const [data, setData] = useState<any>({})
+  const [ago, setAgo] = useState<string | null>(null)
   
-  const getData = async () => { setData((await getDoc(broadcastDocRef)).data()) }
-  useEffect(() => {getData()}, [])
+  const getData = async () => {
+    const theData = (await getDoc(broadcastDocRef)).data()
+    setData(theData)
+    setAgo(() => {
+      const secondsBetween = (Date.now() / 1000) - (theData?.lastSeen?.seconds)
+      return "started streaming " + (secondsBetween > 60 ? Math.floor(secondsBetween/60).toString() + " minutes ago" : Math.floor(secondsBetween).toString() + " seconds ago")
+    })
+  }
+  useEffect(() => {
+    console.log("2 USE EFFECT")
+    getData()
+  }, [])
 
   return (
     <>
-    <Card>
-      <CardHeader>
-        <CardTitle>{data?.name}</CardTitle>
-        <CardDescription>{data?.message}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <p>{JSON.stringify(new Date(data?.lastSeen.seconds))}</p>
-      </CardContent>
-    </Card>
+      <div className="p-3 pt-1">
+        <div className="flex gap-2 items-center">
+          <h1 className="text-lg font-bold">{data?.name}</h1>
+          <p className="text-muted-foreground text-xs">{ago}</p>
+        </div>
+        <p className="text-muted-foreground text-sm">{data?.message}</p>
+      </div>
     </>
   )
 }
-export function ListenerCall({ broadcastDocRef }: { broadcastDocRef: DocumentReference }) {
+export function ListenerCall({ broadcastId} : { broadcastId: string}) {
 
+  const broadcastDocRef = doc(collection(db, "broadcasts"), broadcastId)
   const [isCallStarted, setCallStarted] = useState(false);
   const [status, setStatus] = useState("null");
   const [broadcastData, setBroadcastData] = useState<object>({});
