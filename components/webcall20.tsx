@@ -559,12 +559,12 @@ export function ListenerCall({ broadcastId} : { broadcastId: string}) {
       const servers = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };
 
       pc = new RTCPeerConnection(servers);
-      localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: false });
+      // localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: false });
       remoteStream = new MediaStream();
 
-      localStream.getTracks().forEach((track: any) => {
-        pc.addTrack(track, localStream);
-      });
+      // localStream.getTracks().forEach((track: any) => {
+      //   pc.addTrack(track, localStream);
+      // });
       
       // const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
       // myWebcam.srcObject = localStream;
