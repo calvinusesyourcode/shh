@@ -313,7 +313,7 @@ export function BroadcasterPanel({ user }: { user: any }) {
     </>
   )
 }
-export function BroadcastHandler({ localStream, config }: { localStream: MediaStream, config: {name: string, message: string, status: string, lastSeen: FieldValue, startedAt: FieldValue, audioOnly: boolean, uid: string}}) {
+export function BroadcastHandler({ localStream, config }: { localStream: MediaStream, config: {name: string, message: string, lastSeen: FieldValue, startedAt: FieldValue, audioOnly: boolean, uid: string}}) {
 
   const [callIds, setCallIds] = useState<string[]>([])
   const lastSeenAllowance = 30 * 60 * 1000
