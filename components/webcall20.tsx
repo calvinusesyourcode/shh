@@ -546,7 +546,7 @@ export function ListenerCall({ broadcastId} : { broadcastId: string}) {
   const [seenRecently, setSeenRecently] = useState(false);
   const [broadcasting, setBroadcasting] = useState<string>("unsure");
   
-  let pc: RTCPeerConnection | null = null;
+  let pc: RTCPeerConnection | any = null;
   let localStream: any = null;
   let remoteStream: any = null;
   let unsubscribeDoc: any = null;
