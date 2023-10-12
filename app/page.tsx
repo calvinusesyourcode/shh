@@ -58,7 +58,7 @@ function Fancy({ title, subtitle, description, color, children=<></>, buttons=[]
   )
 }
 
-const gradients = cva(
+const gradients: any = cva(
   "",
   {
     variants: {
