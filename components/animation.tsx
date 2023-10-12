@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-export function AnimateOnceVisible({ animationClass, children }: { animationClass: string, children: React.ReactNode }) {
+export function AnimateOnceVisible({ animationClass, children }: { animationClass: string, children: any }) {
     const [isVisible, setIsVisible] = useState(false);
-    const domRef = useRef();
+    const domRef = useRef<any>();
 
     useEffect(() => {
         const observer = new IntersectionObserver(entries => {
