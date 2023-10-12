@@ -3,6 +3,7 @@
 import { SiteHeader } from "@/components/site-header";
 import { Button, buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
+import { cva, type VariantProps } from "class-variance-authority"
 
 export default function IndexPage() {
   return (
@@ -56,8 +57,6 @@ function Fancy({ title, subtitle, description, color, children=<></>, buttons=[]
     </div>
   )
 }
-
-import { cva, type VariantProps } from "class-variance-authority"
 
 const gradients = cva(
   "",
