@@ -4,31 +4,31 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { AppContext } from "@/lib/context";
 import { db } from "@/lib/firebase";
 import {
-    collection,
-    doc,
-    setDoc,
-    onSnapshot,
-    getDoc,
-    updateDoc,
-    where,
-    addDoc,
-    serverTimestamp,
-    query,
-    Timestamp,
-    CollectionReference,
-    FieldValue,
-    DocumentReference
+  collection,
+  doc,
+  setDoc,
+  onSnapshot,
+  getDoc,
+  updateDoc,
+  where,
+  addDoc,
+  serverTimestamp,
+  query,
+  Timestamp,
+  CollectionReference,
+  FieldValue,
+  DocumentReference
 } from "firebase/firestore";
 import { useContext, useEffect, useState, useRef } from "react";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-  } from "@/components/ui/dialog"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   Card,
   CardContent,
@@ -51,7 +51,6 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch";
 import { PcConnectionIcon } from "./pc-connection-icon";
 import Image from "next/image"
-
 
 export function BroadcasterPanel({ user }: { user: any }) {
   const audioMinimum = 2
@@ -494,12 +493,20 @@ export function ListenerPanel() {
 
   return (
     <>
-    {!broadcastId && <div className="flex justify-start gap-3">
-    {broadcastIds.map(id => (
-      <div className="rounded-lg border hover:bg-primary/20 hover:cursor-pointer animate-fade-in" onClick={() => {setBroadcastId(id); console.log("CLICK")}}>
-        <BroadcastInfo id={id}/>
-      </div>
-    ))}
+    {!broadcastId && <div className="flex justify-start gap-3 flex-wrap m-4">
+      {broadcastIds.length > 0
+        ? <>
+          {broadcastIds.map(id => (
+            <div className="rounded-lg border hover:bg-primary/20 hover:cursor-pointer animate-fade-in" onClick={() => {setBroadcastId(id); console.log("CLICK")}}>
+              <BroadcastInfo id={id} key={id}/>
+            </div>
+          ))}
+        </>
+        : <>
+          <p>There are currently no broadcasts.</p>
+        </>
+        }
+    
     </div>
     }
     {broadcastId && <ListenerCall broadcastId={broadcastId}/> }

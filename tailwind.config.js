@@ -16,6 +16,7 @@ module.exports = {
       },
     },
     extend: {
+      imageRendering: ['pixelated', 'crisp-edges'],
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -72,6 +73,10 @@ module.exports = {
         slideIn: {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(0)' },
+        },
+        slideDown: {
+          '0%': { transform: 'translateY(-100%)' },
+          '100%': { transform: 'translateY(0)' },
         }
       },
       animation: {
@@ -80,6 +85,7 @@ module.exports = {
         'fade-in': 'fadeIn 1s forwards',
         'fade-in-slow': 'fadeIn 3s forwards',
         'slide-in': 'slideIn 1s forwards',
+        'slide-down': 'slideDown 1s forwards',
         'bounce': 'bounce 1s infinite',
       },
     },

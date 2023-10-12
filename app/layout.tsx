@@ -34,8 +34,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <AppContext.Provider value={userData}>
             {/* <AppContext.Provider value={{user: null, role: "noob"}}> */}
             <div className="relative flex min-h-screen flex-col">
-              <SiteHeader />
-              <div className="flex-1 m-4 mt-0">{children}</div>
+              {/* <SiteHeader /> */}
+              <div>{children}</div>
             </div>
             <TailwindIndicator />
             </AppContext.Provider>

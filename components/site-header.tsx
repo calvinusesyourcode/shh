@@ -65,33 +65,52 @@ import { Svg } from "@/components/svgs"
 //   )
 // }
 
-export function SiteHeader() {
-  return (
-  <header className="m-4 mb-2">
-    <div className="flex gap-2 items-end w-[100%]">
-      <Svg.piano3 width="43" height="43" className="mb-1 min-w-43"/>
-      <h1 className="font-extrabold text-5xl">shh</h1>
-    </div>
-    <div className="flex flex-col gap-0 mb-1">
-      <p className="font-bold text-sm text-muted-foreground">open-source, peer-to-peer streaming</p>
-      <p className="font-bold text-sm text-muted-foreground">v0.069 by calvin.art</p>
-    </div>
-  </header>
-  )
-}
+// export function SiteHeader() {
+//   return (
+//   <header className="m-4 mb-2">
+//     <div className="flex gap-2 items-end w-[100%]">
+//       <Svg.piano3 width="43" height="43" className="mb-1 min-w-43"/>
+//       <h1 className="font-extrabold text-5xl">shh</h1>
+//     </div>
+//     <div className="flex flex-col gap-0 mb-1">
+//       <p className="font-bold text-sm text-muted-foreground">open-source, peer-to-peer streaming</p>
+//       <p className="font-bold text-sm text-muted-foreground">v0.069 by calvin.art</p>
+//     </div>
+//   </header>
+//   )
+// }
 
-function SignInButton() {
-  const signInWithGoogle = async () => {
-    await signInWithPopup(auth, googleAuthProvider)
-  }
-  return (
-    <Button onClick={signInWithGoogle}>login w/ google</Button>
-  )
-}
+// function SignInButton() {
+//   const signInWithGoogle = async () => {
+//     await signInWithPopup(auth, googleAuthProvider)
+//   }
+//   return (
+//     <Button onClick={signInWithGoogle}>login w/ google</Button>
+//   )
+// }
 
-function LoggedInScreen() {
-  return (
-            <Button onClick={() => auth.signOut()} className={buttonVariants({variant: "outline"})}>logout</Button>
-  )
+// function LoggedInScreen() {
+//   return (
+//             <Button onClick={() => auth.signOut()} className={buttonVariants({variant: "outline"})}>logout</Button>
+//   )
 
+// }
+
+export function SiteHeader({home=false}) {
+
+  return (
+    <>
+    {home ? (
+      <div className="flex gap-1 text-xl justify-center animate-slide-down mt-1">
+        <div className="flex"><span className="font-bold">s</span><span className="font-light ">onic</span></div>
+        <div className="flex"><span className="font-bold">h</span><span className="font-light ">armony</span></div>
+        <div className="flex"><span className="font-bold">h</span><span className="font-light ">ub</span></div>
+      </div>
+    ) : (
+      <div className="flex gap-1 text-xl justify-center mt-1">
+        <span className="font-extrabold">shh</span>
+      </div>
+    )}
+    </>
+  )
 }
