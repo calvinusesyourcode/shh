@@ -15,7 +15,7 @@ export default function IndexPage() {
       {/* <ColorTest startColor="#3b82f6" endColor="#ec4899" n={10} /> */}
       <div className="animate-fade-in">
         <Fancy
-          children={<SiteHeader home={true}/>}
+          cousin={<SiteHeader home={true}/>}
           title="open-source peer-to-peer live music"
           colors={["#3b82f6","#ec4899"]}
           subtitle="free forever decentralized streaming"
@@ -42,7 +42,7 @@ export default function IndexPage() {
 }
 
 
-function FancyOld({ title, subtitle, description, color, children=<></>, buttons=[] }: { title: string, subtitle: string, description: React.ReactNode, color: string, children?: React.ReactNode, buttons?: string[] }) {
+function FancyOld({ title, subtitle, description, color, cousin=<></>, buttons=[] }: { title: string, subtitle: string, description: React.ReactNode, color: string, cousin?: React.ReactNode, buttons?: string[] }) {
   return (
       <>
       <div className="flex-none relative w-screen h-screen">
@@ -77,7 +77,7 @@ function Fancy({ title, subtitle, description, colors, children=<></>, buttons=[
           <BeautifulGradientCanvas startColor={colors[0]} endColor={colors[1]}/>
         </div>
         <div className="absolute z-30 w-full h-full">
-              {children}
+              {cousin}
           <div className="flex flex-col my-[10rem] items-center text-center">
               <p className={`bg-clip-text text-transparent max-w-[20rem] font-medium text-5xl pb-4 pt-2`} style={{ backgroundImage: `linear-gradient(to bottom right, ${colors[0]}, ${colors[1]})`}}>{title}</p>
               <p className="max-w-[30rem] text-xl font-normal">{subtitle}</p>
