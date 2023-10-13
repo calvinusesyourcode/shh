@@ -42,7 +42,7 @@ export default function IndexPage() {
 }
 
 
-function FancyOld({ title, subtitle, description, color, cousin=<></>, buttons=[] }: { title: string, subtitle: string, description: React.ReactNode, color: string, cousin?: React.ReactNode, buttons?: string[] }) {
+function FancyOld({ title, subtitle, description, color, children=<></>, buttons=[] }: { title: string, subtitle: string, description: React.ReactNode, color: string, children?: React.ReactNode, buttons?: string[] }) {
   return (
       <>
       <div className="flex-none relative w-screen h-screen">
@@ -68,7 +68,7 @@ function FancyOld({ title, subtitle, description, color, cousin=<></>, buttons=[
       </>
   )
 }
-function Fancy({ title, subtitle, description, colors, children=<></>, buttons=[] }: { title: string, subtitle: string, description: React.ReactNode, colors: string[], children?: React.ReactNode, buttons?: string[] }) {
+function Fancy({ title, subtitle, description, colors, cousin=<></>, buttons=[] }: { title: string, subtitle: string, description: React.ReactNode, colors: string[], cousin?: React.ReactNode, buttons?: string[] }) {
   return (
       <>
       
