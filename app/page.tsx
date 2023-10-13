@@ -15,7 +15,7 @@ export default function IndexPage() {
       {/* <ColorTest startColor="#3b82f6" endColor="#ec4899" n={10} /> */}
       <div className="animate-fade-in">
         <Fancy
-          children={<><SiteHeader home={true}/></>}
+          children={<SiteHeader home={true}/>}
           title="open-source peer-to-peer live music"
           colors={["#3b82f6","#ec4899"]}
           subtitle="free forever decentralized streaming"
