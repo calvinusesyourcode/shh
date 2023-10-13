@@ -102,9 +102,9 @@ export function SiteHeader({home=false}) {
     <>
     {home ? (
       <div className="flex gap-1 text-xl justify-center animate-slide-down mt-1">
-        <div className="flex"><span className="font-bold">s</span><span className="font-light ">onic</span></div>
-        <div className="flex"><span className="font-bold">h</span><span className="font-light ">armony</span></div>
-        <div className="flex"><span className="font-bold">h</span><span className="font-light ">ub</span></div>
+        <div className="flex"><span className="font-bold">s</span><span >onic</span></div>
+        <div className="flex"><span className="font-bold">h</span><span >armony</span></div>
+        <div className="flex"><span className="font-bold">h</span><span >ub</span></div>
       </div>
     ) : (
       <div className="flex gap-1 text-xl justify-center mt-1">
