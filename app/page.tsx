@@ -13,17 +13,6 @@ export default function IndexPage() {
   return (
     <>
     <div className="flex flex-col min-h-screen">
-      {/* <SiteHeader home={true}/> */}
-      {/* <ColorTest startColor="#3b82f6" endColor="#ec4899" n={10} /> */}
-      <div className="box">
-        <div className="side front rounded-full p-5">Front</div>
-        <div className="side back rounded-full p-3">Back</div>
-        <div className="side left rounded-full p-3">Left</div>
-        <div className="side right rounded-full p-3">Right</div>
-        <div className="side top rounded-full p-3">Top</div>
-        <div className="side bottom rounded-full p-3">Bottom</div>
-      </div>
-
       <Fancy
         cousin={<SiteHeader home={true}/>}
         title="open-source peer-to-peer live"
