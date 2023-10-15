@@ -39,8 +39,8 @@ export function useIntersectionObserver(once = true): [boolean, RefObject<HTMLDi
                 entries.forEach(entry => {
                     if (entry.isIntersecting && (!isVisible || !once)) {
                         setIsVisible(true);
-                        if (once) {
-                            observer.unobserve(domRef.current as Element);//here
+                        if (once) { 
+                          observer.unobserve(domRef.current as Element)
                         }
                     }
                 });
@@ -48,7 +48,11 @@ export function useIntersectionObserver(once = true): [boolean, RefObject<HTMLDi
 
             observer.observe(domRef.current);
 
-            return () => observer.unobserve(domRef.current as Element);//here
+            return () => {
+              if (domRef.current && domRef.current instanceof Element) {
+                observer.unobserve(domRef.current)
+              }
+            }
         }
     }, [domRef.current, once, isVisible]);
 
