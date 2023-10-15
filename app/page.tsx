@@ -6,8 +6,8 @@ import Link from "next/link";
 import { cva, type VariantProps } from "class-variance-authority"
 import { gradientSteps } from "@/lib/test";
 import React, { RefObject } from 'react';
-import { BeautifulGradientCanvas, BeautifulWaveCanvas } from "@/components/canvases";
-import { AnimateOnceVisible, useIntersectionObserver } from "@/components/animation";
+import { BeautifulGradientCanvas, BeautifulPianoCanvas, BeautifulWaveCanvas } from "@/components/canvases";
+import { AnimateOnceVisible, TypingText, useIntersectionObserver } from "@/components/animation";
 
 export default function IndexPage() {
   return (
@@ -15,16 +15,24 @@ export default function IndexPage() {
     <div className="flex flex-col min-h-screen">
       {/* <SiteHeader home={true}/> */}
       {/* <ColorTest startColor="#3b82f6" endColor="#ec4899" n={10} /> */}
-      <div className="animate-fade-in">
-        <Fancy
-          cousin={<SiteHeader home={true}/>}
-          title="open-source peer-to-peer live music"
-          colors={["#3b82f6","#ec4899"]}
-          subtitle="free forever decentralized streaming"
-          description={<p>a project by <Link href="https://calvin.art" className="underline">calvin.art</Link></p>}
-          buttons={["broadcast", "listen"]}
-          />
+      <div className="box">
+        <div className="side front rounded-full p-5">Front</div>
+        <div className="side back rounded-full p-3">Back</div>
+        <div className="side left rounded-full p-3">Left</div>
+        <div className="side right rounded-full p-3">Right</div>
+        <div className="side top rounded-full p-3">Top</div>
+        <div className="side bottom rounded-full p-3">Bottom</div>
       </div>
+
+      <Fancy
+        cousin={<SiteHeader home={true}/>}
+        title="open-source peer-to-peer live"
+        typedText={[" music"," podcasts","streams"]}
+        colors={["#3b82f6","#ec4899"]}
+        subtitle="free forever decentralized streaming"
+        description={<p>a project by <Link href="https://calvin.art" className="underline">calvin.art</Link></p>}
+        buttons={["broadcast", "listen"]}
+        />
       <Fancy
         title="inspired by chill lofi beats to study to"
         colors={["#eab308","#22c55e"]}
@@ -43,7 +51,7 @@ export default function IndexPage() {
   )
 }
 
-function Fancy({ title, subtitle, description, colors, cousin=<></>, buttons=[] }: { title: string, subtitle: string, description: React.ReactNode, colors: string[], cousin?: React.ReactNode, buttons?: string[] }) {
+function Fancy({ title, subtitle, description, typedText, colors, cousin=<></>, buttons=[] }: { title: string, subtitle: string, description: React.ReactNode, typedText?: string[], colors: string[], cousin?: React.ReactNode, buttons?: string[] }) {
   const [isVisible, ref]: [boolean, RefObject<HTMLDivElement>] = useIntersectionObserver(true)
   const customClass = isVisible ? `animate-fade-in` : `opacity-0`
   
@@ -56,9 +64,12 @@ function Fancy({ title, subtitle, description, colors, cousin=<></>, buttons=[] 
             <div className="absolute z-30 w-full h-full">
               {cousin}
               <div className="flex flex-col my-[10rem] items-center text-center">
-                  <p className={`bg-clip-text text-transparent max-w-[20rem] font-medium text-5xl pb-4 pt-2`} style={{ backgroundImage: `linear-gradient(to bottom right, ${colors[0]}, ${colors[1]})`}}>{title}</p>
-                  <p className="max-w-[30rem] text-xl font-normal">{subtitle}</p>
-                  <div className="max-w-[30rem] text-xl font-extralight text-muted-foreground">{description}</div>
+                  <p className={`drop-shadow-custom1 bg-clip-text text-transparent max-w-[20rem] font-medium text-5xl pb-4 pt-2`} style={{ backgroundImage: `linear-gradient(to bottom right, ${colors[0]}, ${colors[1]})`}}>
+                    {`${title}`}
+                    {typedText && (<TypingText textArray={typedText} interval={6}/>)}
+                  </p>
+                  <p className="drop-shadow-custom1 max-w-[30rem] text-xl font-normal">{subtitle}</p>
+                  <div className="drop-shadow-custom1 max-w-[30rem] text-xl font-extralight text-muted-foreground">{description}</div>
                   {buttons.length != 0 && (
                     <div className="flex gap-3 my-3">
                       {buttons.map((name, i) => (

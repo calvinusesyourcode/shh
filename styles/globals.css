@@ -76,3 +76,54 @@
     @apply bg-background text-foreground;
   }
 }
+
+.coolbox {
+  width: 100px;
+  height: 100px;
+  padding: 20px;
+  position: relative;
+  transform-style: preserve-3d;
+  transform: perspective(500px) rotateX(0) rotateY(0) rotateZ(0);
+  animation: rotateBox 10s infinite;
+}
+.box {
+  width: 100px;
+  height: 100px;
+  padding: 20px;
+  position: relative;
+  transform-style: preserve-3d;
+  transform: perspective(500px) rotateX(0) rotateY(0) rotateZ(0);
+  animation: rotateBoxRight 10s infinite;
+}
+
+.side {
+  position: absolute;
+  height: 100px;
+  width: 100px;
+  background: rgba(18, 87, 167, 0.8);
+}
+
+.front  { transform: rotateY(0deg) translateZ(50px); }
+.back   { transform: rotateY(180deg) translateZ(50px); }
+.left   { transform: rotateY(-90deg) translateZ(50px); }
+.right  { transform: rotateY(90deg) translateZ(50px); }
+.top    { transform: rotateX(90deg) translateZ(50px); }
+.bottom { transform: rotateX(-90deg) translateZ(50px); }
+
+@keyframes rotateBox {
+  from {
+    transform: perspective(500px) rotateX(0) rotateY(0) rotateZ(0);
+  }
+  to {
+    transform: perspective(500px) rotateX(360deg) rotateY(360deg) rotateZ(360deg);
+  }
+}
+
+@keyframes rotateBoxRight {
+  from {
+    transform: perspective(500px) rotateY(0deg);
+  }
+  to {
+    transform: perspective(500px) rotateY(360deg);
+  }
+}

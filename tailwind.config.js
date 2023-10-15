@@ -16,6 +16,9 @@ module.exports = {
       },
     },
     extend: {
+      dropShadow: {
+        'custom1': '4px 4px 10px rgba(0, 0, 0, 1)',
+      },
       imageRendering: ['pixelated', 'crisp-edges'],
       colors: {
         border: "hsl(var(--border))",
@@ -77,7 +80,15 @@ module.exports = {
         slideDown: {
           '0%': { transform: 'translateY(-100%)' },
           '100%': { transform: 'translateY(0)' },
-        }
+        },
+        blink: {
+          '0%, 49%': {
+            opacity: '1',
+          },
+          '50%, 100%': {
+            opacity: '0',
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -87,6 +98,7 @@ module.exports = {
         'slide-in': 'slideIn 1s forwards',
         'slide-down': 'slideDown 1s forwards',
         'bounce': 'bounce 1s infinite',
+        'blink': 'blink 1s infinite',
       },
     },
   },
