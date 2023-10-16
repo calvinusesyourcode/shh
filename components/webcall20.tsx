@@ -63,17 +63,8 @@ export function BroadcasterPanel({ user }: { user: any }) {
     "Podcast": ["Perhaps interesting...", "So many ideas, so little time...", "Hello world!"]
   }
 
-  useEffect(() => {
-    setInterval(() => {
-      if (dataStream) {
-        setDataStream((previous: string) => {
-          return (parseInt(previous) + 1).toString()
-        })
-      } else {
-        setDataStream("1")
-      }
-    }, 1000)
-  }, [])
+  // test area
+  const [myData, setMyData] = useState<any>(null)
 
   const [afkCheckTimerId, setAfkCheckTimerId] = useState<NodeJS.Timer | null>(null)
   const [announce, setAnnounce] = useState(true)
@@ -179,6 +170,7 @@ export function BroadcasterPanel({ user }: { user: any }) {
       video: audioOnly ? false : { deviceId: videoInput.value ? { exact: videoInput.value } : undefined },
     }
 
+    console.log(JSON.stringify(constraints))
     if ("volume" in mediaDeviceConstraints) { constraints.audio.volume = { exact: 1.0 } }
     else if ("autoGainControl" in mediaDeviceConstraints) { constraints.audio.autoGainControl = false }
 
@@ -337,7 +329,13 @@ export function BroadcasterPanel({ user }: { user: any }) {
       </Card>
     )}
     {(broadcasting && localStream && config) && (
+      <>
       <BroadcastHandler localStream={localStream} config={config} data={dataStream}/>
+      <div className="grid grid-cols-4 items-center gap-4">
+        <Textarea id="msgInput" value={msg} className="col-span-3" placeholder={msgPlaceholder} onChange={(event) => {setMyData(event.target.value)}}/>
+        <Button onClick={() => setDataStream(myData)} className={buttonVariants({variant:"outline"})}>Send</Button>
+      </div>
+      </>
     )}
     </>
   )
@@ -399,9 +397,12 @@ export function BroadcastCall({ callsCollection, localStream, callId, data }: { 
   const [status, setStatus] = useState(null)
   
   useEffect(() => {
-    if (dataChannel) {
-      dataChannel.send(JSON.stringify(data))
-    }
+    console.log("1432, data was updated")
+      if (dataChannel) {
+        const dataString = JSON.stringify(data)
+        console.log("trying to send data:", dataString)
+        dataChannel.send(dataString)
+      }
   }, [data])
 
   useEffect(() => {
