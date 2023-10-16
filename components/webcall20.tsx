@@ -63,6 +63,18 @@ export function BroadcasterPanel({ user }: { user: any }) {
     "Podcast": ["Perhaps interesting...", "So many ideas, so little time...", "Hello world!"]
   }
 
+  useEffect(() => {
+    setInterval(() => {
+      if (dataStream) {
+        setDataStream((previous: string) => {
+          return (parseInt(previous) + 1).toString()
+        })
+      } else {
+        setDataStream("1")
+      }
+    }, 1000)
+  }, [])
+
   const [afkCheckTimerId, setAfkCheckTimerId] = useState<NodeJS.Timer | null>(null)
   const [announce, setAnnounce] = useState(true)
   const [anon, setAnon] = useState(true)
@@ -76,6 +88,7 @@ export function BroadcasterPanel({ user }: { user: any }) {
   const [broadcasting, setBroadcasting] = useState<boolean>(false)
   const [broadcastType, setBroadcastType] = useState<string>(broadcastTypes[0])
   const [config, setConfig] = useState<{name: string, message: string, type: string, lastSeen: FieldValue, startedAt: FieldValue, audioOnly: boolean, uid: string} | undefined>(undefined)
+  const [dataStream, setDataStream] = useState<any>(null)
   const [info, setInfo] = useState<string>("")
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
   const [msg, setMsg] = useState<string | undefined>(undefined)
@@ -245,87 +258,91 @@ export function BroadcasterPanel({ user }: { user: any }) {
 
   return (
     <>
-    {!broadcasting && <Card className="max-w-[500px] self-center">
-      <CardHeader>
-        <CardTitle>Broadcast Settings</CardTitle>
-        <CardDescription>*must be set <i>before</i> the broadcast begins*</CardDescription>
-      </CardHeader>
-      <CardContent>
-      <div className="flex flex-col gap-3 items-end">
-      <Select onValueChange={(value) => {onValueChange(value, "broadcastType")}}>
-        <SelectTrigger className="w-[140px]">
-          <SelectValue placeholder={broadcastType} />
-        </SelectTrigger>
-        <SelectContent>
-          {broadcastTypes.map((item, index) => (
-            <SelectItem key={index} value={item}>{item}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-        {showInputSettings && <Select onValueChange={(value) => {onValueChange(value, "audioInput")}}>
-          <SelectTrigger className="w-[260px]">
-            <SelectValue placeholder={audioInput.label} />
+    {!broadcasting && (
+      <Card className="max-w-[500px] self-center">
+        <CardHeader>
+          <CardTitle>Broadcast Settings</CardTitle>
+          <CardDescription>*must be set <i>before</i> the broadcast begins*</CardDescription>
+        </CardHeader>
+        <CardContent>
+        <div className="flex flex-col gap-3 items-end">
+        <Select onValueChange={(value) => {onValueChange(value, "broadcastType")}}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder={broadcastType} />
           </SelectTrigger>
           <SelectContent>
-          {audioInputs.map((option, index) => (
-            <SelectItem key={index} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
+            {broadcastTypes.map((item, index) => (
+              <SelectItem key={index} value={item}>{item}</SelectItem>
+            ))}
           </SelectContent>
-        </Select>}
-        <Progress value={audioInputLevel} className="w-[260px]"/>
-        {(!audioOnly && showInputSettings)&& <Select onValueChange={(value) => {onValueChange(value, "videoInput")}}>
-          <SelectTrigger className="w-[260px]">
-            <SelectValue placeholder={videoInput.label} />
-          </SelectTrigger>
-          <SelectContent>
-          {videoInputs.map((option, index) => (
-            <SelectItem key={index} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-          </SelectContent>
-        </Select>}
-      <div className="flex items-center justify-end space-x-2">
-        <Label htmlFor="anonymousSwitch">Anonymous</Label>
-        <Switch
-          id="anonymousSwitch"
-          checked={anon}
-          onCheckedChange={() => setAnon(!anon)}
-        />
-      </div>
-      {!anon &&
-      <>
-      <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="nameInput" className="text-right">Name</Label>
-          <Input id="nameInput" value={name} className="col-span-3" placeholder={user.displayName} onChange={(event) => {setName(event.target.value)}}/>
-      </div>
-      <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="msgInput" className="text-right">Msg</Label>
-          <Textarea id="msgInput" value={msg} className="col-span-3" placeholder={msgPlaceholder} onChange={(event) => {setMsg(event.target.value)}}/>
-      </div>
-      </>
-      }
-      <div className="flex items-center justify-end space-x-2">
-        <Label htmlFor="audio-only" className="text-muted-foreground">Video Transmission </Label>
-        <Switch
-          id="audio-only"
-          checked={!audioOnly}
-        />
-      </div>
-      </div>
-      </CardContent>
-      <CardFooter className="flex justify-end gap-3">
-        <p className="text-muted-foreground">{audioInputLevel == 0 ? "no audio detected" : audioInputLevel < audioMinimum ? "audio very quiet" : ""}</p>
-        <Button disabled={starting} className={buttonVariants({variant: audioInputLevel < audioMinimum ? "outline" : "default"})} onClick={() => attemptBroadcast()}>Go live!</Button>  
-      </CardFooter>
-    </Card>}
-    {(broadcasting && localStream && config) && <BroadcastHandler localStream={localStream} config={config} />}
+        </Select>
+          {showInputSettings && <Select onValueChange={(value) => {onValueChange(value, "audioInput")}}>
+            <SelectTrigger className="w-[260px]">
+              <SelectValue placeholder={audioInput.label} />
+            </SelectTrigger>
+            <SelectContent>
+            {audioInputs.map((option, index) => (
+              <SelectItem key={index} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+            </SelectContent>
+          </Select>}
+          <Progress value={audioInputLevel} className="w-[260px]"/>
+          {(!audioOnly && showInputSettings)&& <Select onValueChange={(value) => {onValueChange(value, "videoInput")}}>
+            <SelectTrigger className="w-[260px]">
+              <SelectValue placeholder={videoInput.label} />
+            </SelectTrigger>
+            <SelectContent>
+            {videoInputs.map((option, index) => (
+              <SelectItem key={index} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+            </SelectContent>
+          </Select>}
+        <div className="flex items-center justify-end space-x-2">
+          <Label htmlFor="anonymousSwitch">Anonymous</Label>
+          <Switch
+            id="anonymousSwitch"
+            checked={anon}
+            onCheckedChange={() => setAnon(!anon)}
+          />
+        </div>
+        {!anon &&
+        <>
+        <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="nameInput" className="text-right">Name</Label>
+            <Input id="nameInput" value={name} className="col-span-3" placeholder={user.displayName} onChange={(event) => {setName(event.target.value)}}/>
+        </div>
+        <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="msgInput" className="text-right">Msg</Label>
+            <Textarea id="msgInput" value={msg} className="col-span-3" placeholder={msgPlaceholder} onChange={(event) => {setMsg(event.target.value)}}/>
+        </div>
+        </>
+        }
+        <div className="flex items-center justify-end space-x-2">
+          <Label htmlFor="audio-only" className="text-muted-foreground">Video Transmission </Label>
+          <Switch
+            id="audio-only"
+            checked={!audioOnly}
+          />
+        </div>
+        </div>
+        </CardContent>
+        <CardFooter className="flex justify-end gap-3">
+          <p className="text-muted-foreground">{audioInputLevel == 0 ? "no audio detected" : audioInputLevel < audioMinimum ? "audio very quiet" : ""}</p>
+          <Button disabled={starting} className={buttonVariants({variant: audioInputLevel < audioMinimum ? "outline" : "default"})} onClick={() => attemptBroadcast()}>Go live!</Button>  
+        </CardFooter>
+      </Card>
+    )}
+    {(broadcasting && localStream && config) && (
+      <BroadcastHandler localStream={localStream} config={config} data={dataStream}/>
+    )}
     </>
   )
 }
-export function BroadcastHandler({ localStream, config }: { localStream: MediaStream, config: {name: string, message: string, lastSeen: FieldValue, startedAt: FieldValue, audioOnly: boolean, uid: string}}) {
+export function BroadcastHandler({ localStream, config, data }: { localStream: MediaStream, config: {name: string, message: string, lastSeen: FieldValue, startedAt: FieldValue, audioOnly: boolean, uid: string}, data: any}) {
 
   const [callIds, setCallIds] = useState<string[]>([])
   const lastSeenAllowance = 30 * 60 * 1000
@@ -370,20 +387,27 @@ export function BroadcastHandler({ localStream, config }: { localStream: MediaSt
     <>
     <div className="flex gap-2">
       {localStream && callIds.map(callId => (
-        <BroadcastCall callsCollection={callsCollection} key={callId} localStream={localStream} callId={callId} />
+        <BroadcastCall callsCollection={callsCollection} key={callId} localStream={localStream} callId={callId} data={data} />
       ))}
     </div>
     </>
   )
 }
-export function BroadcastCall({ callsCollection, localStream, callId }: { callsCollection: CollectionReference, localStream: any; callId: string }) {
+export function BroadcastCall({ callsCollection, localStream, callId, data }: { callsCollection: CollectionReference, localStream: any, callId: string, data: any }) {
 
+  const [dataChannel, setDataChannel] = useState<RTCDataChannel | null>(null)
   const [status, setStatus] = useState(null)
+  
+  useEffect(() => {
+    if (dataChannel) {
+      dataChannel.send(JSON.stringify(data))
+    }
+  }, [data])
 
   useEffect(() => {
     let pc: RTCPeerConnection | null = null
     let remoteStream: MediaStream | null = null
-    let dataChannel: RTCDataChannel | null = null
+    let myDataChannel: RTCDataChannel | null = null
 
     const joinCall = async () => {
       const response = await fetch(`https://piano.metered.live/api/v1/turn/credentials?apiKey=${process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY}`)
@@ -392,6 +416,8 @@ export function BroadcastCall({ callsCollection, localStream, callId }: { callsC
 
       pc = new RTCPeerConnection(servers)
       remoteStream = new MediaStream()
+      myDataChannel = pc.createDataChannel("webtunnel")
+      setDataChannel(myDataChannel)
       
       localStream.getTracks().forEach((track: any) => {
         if (pc) {pc.addTrack(track, localStream)}
@@ -443,9 +469,6 @@ export function BroadcastCall({ callsCollection, localStream, callId }: { callsC
           }
         })
       })
-      
-      dataChannel = pc.createDataChannel("webtunnel")
-      dataChannel.send("Hello world!")
       
       return () => {
         unsubscribe()
@@ -541,7 +564,6 @@ export function BroadcastInfo({ id }: { id: string }) {
     })
   }
   useEffect(() => {
-    console.log("2 USE EFFECT")
     getData()
   }, [])
 
@@ -564,6 +586,7 @@ export function ListenerCall({ broadcastId} : { broadcastId: string}) {
   const [isCallStarted, setCallStarted] = useState(false)
   const [seenRecently, setSeenRecently] = useState(false)
   const [status, setStatus] = useState("null")
+  const [dataReceived, setDataReceived] = useState<any>(null)
   const broadcastDocRef = doc(collection(db, "broadcasts"), broadcastId)
   
   let localStream: any = null
@@ -598,7 +621,10 @@ export function ListenerCall({ broadcastId} : { broadcastId: string}) {
 
       pc.ondatachannel = (event) => {
         event.channel.onmessage = (msgevent) => {
-          console.log("RECEIVED::", JSON.stringify(msgevent.data))
+          setDataReceived((oldData: any) => {
+            if (oldData) {return [...oldData, msgevent.data]}
+            else {return [msgevent.data]}
+          })
         }
       }
 
@@ -679,51 +705,53 @@ export function ListenerCall({ broadcastId} : { broadcastId: string}) {
 
   return (
       <>
-      <div className="flex gap-2">
-        <Dialog>
-        <DialogTrigger asChild>
-            <Button variant="outline">Info</Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-            <p>A library this beautiful deserves some accompaniment!</p>
-            <p>If only there were a way to hear the virtuosos play that upright piano, in real-time, from anywhere in the building...</p>
-            <p><b>shhh</b>: the world&apos;s quietest live music app.</p>
-            <p>A free, open-source, peer-to-peer streaming app by calvin.art.<sup>1</sup></p>
-            <p>For more, check out the source code on <a href="https://github.com/calvinusesyourcode/webrtc-2" target="_blank" rel="noopener noreferrer"><u>github</u></a> or see my blog post to learn how it all works!</p>
-            <DialogFooter>
-            <p className="text-xs"><sup>1</sup> Help keep this app free by donating!</p>
-            </DialogFooter>
-        </DialogContent>
-        </Dialog>
-        { isCallStarted &&
-        <Button onClick={() => endCall()} variant={"destructive"}>Disconnect</Button>
-        }
-        { !isCallStarted && broadcasting == "yes" &&
-        <Button onClick={() => startCall()}>Connect</Button>
-        }
-      
+      <div className="p-4">
+        <div className="flex gap-2">
+          <Dialog>
+          <DialogTrigger asChild>
+              <Button variant="outline">Info</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+              <p>A library this beautiful deserves some accompaniment!</p>
+              <p>If only there were a way to hear the virtuosos play that upright piano, in real-time, from anywhere in the building...</p>
+              <p><b>shhh</b>: the world&apos;s quietest live music app.</p>
+              <p>A free, open-source, peer-to-peer streaming app by calvin.art.<sup>1</sup></p>
+              <p>For more, check out the source code on <a href="https://github.com/calvinusesyourcode/webrtc-2" target="_blank" rel="noopener noreferrer"><u>github</u></a> or see my blog post to learn how it all works!</p>
+              <DialogFooter>
+              <p className="text-xs"><sup>1</sup> Help keep this app free by donating!</p>
+              </DialogFooter>
+          </DialogContent>
+          </Dialog>
+          { isCallStarted &&
+          <Button onClick={() => endCall()} variant={"destructive"}>Disconnect</Button>
+          }
+          { !isCallStarted && broadcasting == "yes" &&
+          <Button onClick={() => startCall()}>Connect</Button>
+          }
+        </div>
+        {broadcasting == "yes" ? (
+            <>
+        <div className="flex gap-2">
+          <audio id="audio-playback" controls />
+          <p>status: {status}</p>
+          <p>{JSON.stringify(dataReceived)}</p>
+        </div>
+        </>
+        ) : null}
+        {broadcasting == "unsure" ? (
+            <>
+            <p className="font-bold text-lg">checking for broadcasts...</p>
+            <Image src="/pikachu.gif" height={100} width={100} alt="Curious pikachu" />
+            </>
+        ) : null}
+        {broadcasting == "no" ? (
+            <>
+            <p className="font-bold text-lg">nobody was home!</p>
+            <Image src="/will.gif" height={100} width={100} alt="Will Smith wondering where everybody is" />
+            </>
+        ) : null}
+        <p className="text-muted-foreground">{JSON.stringify(broadcastData)}</p>
       </div>
-      {broadcasting == "yes" ? (
-          <>
-      <div className="flex gap-2">
-        <audio id="audio-playback" controls />
-        <p>status: {status}</p>
-      </div>
-      </>
-      ) : null}
-      {broadcasting == "unsure" ? (
-          <>
-          <p className="font-bold text-lg">checking for broadcasts...</p>
-          <Image src="/pikachu.gif" height={100} width={100} alt="Curious pikachu" />
-          </>
-      ) : null}
-      {broadcasting == "no" ? (
-          <>
-          <p className="font-bold text-lg">nobody was home!</p>
-          <Image src="/will.gif" height={100} width={100} alt="Will Smith wondering where everybody is" />
-          </>
-      ) : null}
-      <p>{JSON.stringify(broadcastData)}</p>
     </>
   )
 }
