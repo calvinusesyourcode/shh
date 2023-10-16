@@ -429,6 +429,7 @@ export function BroadcastCall({ callsCollection, localStream, callId, data }: { 
       pc = new RTCPeerConnection(servers)
       remoteStream = new MediaStream()
       dc = pc.createDataChannel("tunnel")
+      console.log("dcstate", dc.readyState)
       
       dc.onopen = (event) => {
         console.log("data channel open!", JSON.stringify(event))
