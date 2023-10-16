@@ -1,8 +1,8 @@
-'use client';
+'use client'
 
 import { Button, buttonVariants } from "@/components/ui/button"
-import { AppContext } from "@/lib/context";
-import { db } from "@/lib/firebase";
+import { AppContext } from "@/lib/context"
+import { db } from "@/lib/firebase"
 import {
   collection,
   doc,
@@ -18,8 +18,8 @@ import {
   CollectionReference,
   FieldValue,
   DocumentReference
-} from "firebase/firestore";
-import { useContext, useEffect, useState, useRef } from "react";
+} from "firebase/firestore"
+import { useContext, useEffect, useState, useRef } from "react"
 import {
   Dialog,
   DialogContent,
@@ -44,104 +44,110 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Progress } from "@/components/ui/progress";
-import { Close } from "@radix-ui/react-dialog";
+import { Progress } from "@/components/ui/progress"
+import { Close } from "@radix-ui/react-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch";
-import { PcConnectionIcon } from "./pc-connection-icon";
+import { Switch } from "@/components/ui/switch"
+import { PcConnectionIcon } from "./pc-connection-icon"
 import Image from "next/image"
+import { Textarea } from "@/components/ui/textarea"
+
 
 export function BroadcasterPanel({ user }: { user: any }) {
-  const audioMinimum = 2
   const afkCheckInterval = 20 * 60 * 1000
+  const audioMinimum = 2
+  const broadcastTypes = ["Music Stream", "Podcast"]
+  const placeholders: any = {
+    "Music Stream": ["I love piano :D", "Music is cool I think...", "Notes flowing, your mind exploding.", "I am the Piano Man!"],
+    "Podcast": ["Perhaps interesting...", "So many ideas, so little time...", "Hello world!"]
+  }
 
+  const [afkCheckTimerId, setAfkCheckTimerId] = useState<NodeJS.Timer | null>(null)
+  const [announce, setAnnounce] = useState(true)
+  const [anon, setAnon] = useState(true)
+  const [audioInput, setAudioInput] =     useState<{label: string, value: string | undefined}>({label: "Default Microphone", value: undefined})
+  const [audioInputLevel, setAudioInputLevel] = useState<number>(0)
+  const [audioInputs, setAudioInputs] =   useState<{label: string, value: string}[]>([])
+  const [audioOnly, setAudioOnly] = useState(true)
+  const [audioOutput, setAudioOutput] =   useState<{label: string, value: string | undefined}>({label: "Default Speakers", value: undefined})
+  const [audioOutputEnabled, setAudioOutputEnabled] = useState(false)
+  const [audioOutputs, setAudioOutputs] = useState<{label: string, value: string}[]>([])
   const [broadcasting, setBroadcasting] = useState<boolean>(false)
+  const [broadcastType, setBroadcastType] = useState<string>(broadcastTypes[0])
+  const [config, setConfig] = useState<{name: string, message: string, type: string, lastSeen: FieldValue, startedAt: FieldValue, audioOnly: boolean, uid: string} | undefined>(undefined)
+  const [info, setInfo] = useState<string>("")
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null)
+  const [msg, setMsg] = useState<string | undefined>(undefined)
+  const [msgPlaceholder, setMsgPlaceholder] = useState<string>("Hello world!")
+  const [music, setMusic] = useState<boolean>(true)
+  const [name, setName] = useState<string | undefined>(undefined)
+  const [showInputSettings, setShowInputSettings] = useState<boolean>(true)
   const [starting, setStarting] = useState<boolean>(false)
   const [testing, setTesting] = useState<boolean>(false)
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null)
-  const [name, setName] = useState<string | undefined>(undefined)
-  const [msg, setMsg] = useState<string | undefined>(undefined)
-  const msgPlaceholders: string[] = ["I love piano :D", "Music is cool I think...", "Notes flowing, your mind exploding.", "I am the Piano Man!"]
-  const [msgPlaceholder, setMsgPlaceholder] = useState<string>(msgPlaceholders[Math.floor(Math.random() * msgPlaceholders.length)])
-  const [callCollection, setCallCollection] = useState<CollectionReference | null>(null)
-  const [config, setConfig] = useState<{name: string, message: string, lastSeen: FieldValue, startedAt: FieldValue, audioOnly: boolean, uid: string} | undefined>(undefined)
-  
+  const [videoInput, setVideoInput] =     useState<{label: string, value: string | undefined}>({label: "Default Webcam", value: undefined})
+  const [videoInputs, setVideoInputs] =   useState<{label: string, value: string}[]>([])
 
-  const [showInputSettings, setShowInputSettings] = useState<boolean>(true)
-  useEffect(() => { // do not show input settings for iPhone users
-    setShowInputSettings(!(/iPhone/i.test(navigator.userAgent)))
-  })
-  
-  const [audioOnly, setAudioOnly] = useState(true);
-  const [audioOutputEnabled, setAudioOutputEnabled] = useState(false);
-  const [anon, setAnon] = useState(true);
-  const [announce, setAnnounce] = useState(true);
-  const [afkCheckTimerId, setAfkCheckTimerId] = useState<NodeJS.Timer | null>(null);
-  // stream settings
-  const [audioInput, setAudioInput] =     useState<{label: string, value: string | undefined}>({label: "Default Microphone", value: undefined});
-  const [audioOutput, setAudioOutput] =   useState<{label: string, value: string | undefined}>({label: "Default Speakers", value: undefined});
-  const [videoInput, setVideoInput] =     useState<{label: string, value: string | undefined}>({label: "Default Webcam", value: undefined});
-  const [audioInputs, setAudioInputs] =   useState<{label: string, value: string}[]>([]);
-  const [audioOutputs, setAudioOutputs] = useState<{label: string, value: string}[]>([]);
-  const [videoInputs, setVideoInputs] =   useState<{label: string, value: string}[]>([]);
-  const [audioInputLevel, setAudioInputLevel] = useState<number>(0);
-  // debug stream
-  const [info, setInfo] = useState<string>("")
-
-  useEffect(() => { // fetch devices
+  useEffect(() => { // update on broadcastType change
+    setMsgPlaceholder(placeholders[broadcastType][Math.floor(Math.random() * placeholders[broadcastType].length)])
+    setMusic(broadcastType.toLowerCase().includes("music") ? true : false)
+  }, [broadcastType])
+  useEffect(() => { // on page load
+    // fetch devices
     fetchDevices().then((devices) => {
       if (devices) {
         devices.forEach((device) => {
-          const option = { label: device.label, value: device.deviceId };
+          const option = { label: device.label, value: device.deviceId }
           if (device.kind === "audioinput") {
-            setAudioInputs((prevOptions) => [...prevOptions, option]);
+            setAudioInputs((prevOptions) => [...prevOptions, option])
           } else if (device.kind === "audiooutput") {
-            setAudioOutputs((prevOptions) => [...prevOptions, option]);
+            setAudioOutputs((prevOptions) => [...prevOptions, option])
           } else if (device.kind === "videoinput") {
-            setVideoInputs((prevOptions) => [...prevOptions, option]);
+            setVideoInputs((prevOptions) => [...prevOptions, option])
           }
-        });
+        })
       }
-    });
-  }, []);
+    })
+    // no input choice for iPhone users
+    setShowInputSettings(!(/iPhone/i.test(navigator.userAgent))) 
+  }, [])
   useEffect(() => { // draw audio input level
     if (localStream) {
-      const audioContext = new AudioContext();
-      const source = audioContext.createMediaStreamSource(localStream);
-      const analyser = audioContext.createAnalyser();
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      const audioContext = new AudioContext()
+      const source = audioContext.createMediaStreamSource(localStream)
+      const analyser = audioContext.createAnalyser()
+      const dataArray = new Uint8Array(analyser.frequencyBinCount)
 
-      source.connect(analyser);
+      source.connect(analyser)
 
       const draw = () => {
-        analyser.getByteFrequencyData(dataArray);
+        analyser.getByteFrequencyData(dataArray)
 
         // Calculate the audio level
-        let sum = 0;
+        let sum = 0
         for (let i = 0; i < dataArray.length; i++) {
-          sum += dataArray[i];
+          sum += dataArray[i]
         }
-        const average = sum / dataArray.length;
-        setAudioInputLevel(average);
-      };
+        const average = sum / dataArray.length
+        setAudioInputLevel(average)
+      }
 
       const intervalId = setInterval(() => {
-        draw();
-      }, 100);
+        draw()
+      }, 100)
 
       return () => {
         // Cleanup
         if (intervalId) {
-          clearInterval(intervalId);
+          clearInterval(intervalId)
         }
-        audioContext.close();
-      };
+        audioContext.close()
+      }
     }
-  }, [localStream]);
+  }, [localStream])
   useEffect(() => { // re-init media
-    initMedia();
-  }, [audioInput, audioOutput, videoInput, audioOnly]);
+    initMedia()
+  }, [audioInput, audioOutput, videoInput, audioOnly])
 
   const initMedia = async () => {
     if (localStream) { localStream.getTracks().forEach((track) => track.stop()) }
@@ -152,13 +158,13 @@ export function BroadcasterPanel({ user }: { user: any }) {
     
     const constraints: any = {
       audio: {
-        echoCancellation: false,
-        noiseSuppression: false,
+        echoCancellation: music ? false : true,
+        noiseSuppression: music ? false: true,
         sampleSize: 24,
         deviceId: audioInput.value ? { exact: audioInput.value } : undefined
       },
       video: audioOnly ? false : { deviceId: videoInput.value ? { exact: videoInput.value } : undefined },
-    };
+    }
 
     if ("volume" in mediaDeviceConstraints) { constraints.audio.volume = { exact: 1.0 } }
     else if ("autoGainControl" in mediaDeviceConstraints) { constraints.audio.autoGainControl = false }
@@ -169,17 +175,17 @@ export function BroadcasterPanel({ user }: { user: any }) {
 
 
     try {
-      const localStreamObject = await navigator.mediaDevices.getUserMedia(constraints);
-      setLocalStream(localStreamObject);
-      const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement;
-      myWebcam.srcObject = localStreamObject;
-      myWebcam.play().catch((error) => {console.log(error)});
+      const localStreamObject = await navigator.mediaDevices.getUserMedia(constraints)
+      setLocalStream(localStreamObject)
+      const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement
+      myWebcam.srcObject = localStreamObject
+      myWebcam.play().catch((error) => {console.log(error)})
     } catch (error) {
-      console.error(error);
+      console.error(error)
     }
   }
   const attemptBroadcast = async () => {
-    await initMedia();
+    await initMedia()
     if (audioInputLevel != 0) {startBroadcast()}
   }
   const startBroadcast = async () => {
@@ -187,6 +193,7 @@ export function BroadcasterPanel({ user }: { user: any }) {
     const data = {
       name: anon ? "anonymous" : name ? name : user.displayName,
       message: msg ? msg : msgPlaceholder,
+      type: broadcastType,
       lastSeen: serverTimestamp(),
       startedAt: serverTimestamp(),
       audioOnly: audioOnly,
@@ -205,34 +212,36 @@ export function BroadcasterPanel({ user }: { user: any }) {
     if (broadcasting) await updateDoc(doc(collection(db, 'broadcasts'), user.uid), {lastSeen: serverTimestamp()})
   }
   const onValueChange = (value: string, type: string) => {
-    let correspondingObject;
+    let correspondingObject
   
     if (type === "audioInput") {
-      correspondingObject = audioInputs.find(item => item.value === value);
+      correspondingObject = audioInputs.find(item => item.value === value)
       if (correspondingObject) {
-        setAudioInput(correspondingObject);
+        setAudioInput(correspondingObject)
       }
     } else if (type === "audioOutput") {
-      correspondingObject = audioOutputs.find(item => item.value === value);
+      correspondingObject = audioOutputs.find(item => item.value === value)
       if (correspondingObject) {
-        setAudioOutput(correspondingObject);
+        setAudioOutput(correspondingObject)
       }
     } else if (type === "videoInput") {
-      correspondingObject = videoInputs.find(item => item.value === value);
+      correspondingObject = videoInputs.find(item => item.value === value)
       if (correspondingObject) {
-        setVideoInput(correspondingObject);
+        setVideoInput(correspondingObject)
       }
+    } else if (type === "broadcastType") {
+      setBroadcastType(value)
     }
     
-  };
+  }
   const fetchDevices = async () => {
     try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      return devices;
+      const devices = await navigator.mediaDevices.enumerateDevices()
+      return devices
     } catch (error) {
-      console.error(error);
+      console.error(error)
     }
-  };
+  }
 
   return (
     <>
@@ -243,6 +252,16 @@ export function BroadcasterPanel({ user }: { user: any }) {
       </CardHeader>
       <CardContent>
       <div className="flex flex-col gap-3 items-end">
+      <Select onValueChange={(value) => {onValueChange(value, "broadcastType")}}>
+        <SelectTrigger className="w-[140px]">
+          <SelectValue placeholder={broadcastType} />
+        </SelectTrigger>
+        <SelectContent>
+          {broadcastTypes.map((item, index) => (
+            <SelectItem key={index} value={item}>{item}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
         {showInputSettings && <Select onValueChange={(value) => {onValueChange(value, "audioInput")}}>
           <SelectTrigger className="w-[260px]">
             <SelectValue placeholder={audioInput.label} />
@@ -284,7 +303,7 @@ export function BroadcasterPanel({ user }: { user: any }) {
       </div>
       <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="msgInput" className="text-right">Msg</Label>
-          <Input id="msgInput" value={msg} className="col-span-3" placeholder={msgPlaceholder} onChange={(event) => {setMsg(event.target.value)}}/>
+          <Textarea id="msgInput" value={msg} className="col-span-3" placeholder={msgPlaceholder} onChange={(event) => {setMsg(event.target.value)}}/>
       </div>
       </>
       }
@@ -318,34 +337,34 @@ export function BroadcastHandler({ localStream, config }: { localStream: MediaSt
         where("lastSeen", ">=", Timestamp.fromDate(new Date((Date.now()-lastSeenAllowance)))
         )), async (snapshot) => {
       setCallIds(oldCallIds => {
-        let newCallIds = [...(oldCallIds || [])];
+        let newCallIds = [...(oldCallIds || [])]
         snapshot.docChanges().forEach((change) => {
           const id = change.doc.id
           if (id) {
             if (change.type === "added") {
-              console.log("doc "+id+" added");
+              console.log("doc "+id+" added")
               console.log(typeof change.doc.data().lastSeen, change.doc.data().lastSeen)
               if (!newCallIds.includes(id)) {
-                newCallIds.push(id);
+                newCallIds.push(id)
               }
             }
             if (change.type === "modified") {
             }
             if (change.type === "removed") {
-              newCallIds = newCallIds.filter(call => call !== id);
+              newCallIds = newCallIds.filter(call => call !== id)
             }
           }
-        });
+        })
         console.log("newCallIds",newCallIds)
-        return newCallIds;
-      });
+        return newCallIds
+      })
     }, (error) => {
-      console.error("Error in onSnapshot(collection(db, 'calls'))::", error);
-    });
+      console.error("Error in onSnapshot(collection(db, 'calls'))::", error)
+    })
 
     return () => unsubscribe();  // Clean up subscription
   
-  }, []);
+  }, [])
   
   return (
     <>
@@ -359,137 +378,130 @@ export function BroadcastHandler({ localStream, config }: { localStream: MediaSt
 }
 export function BroadcastCall({ callsCollection, localStream, callId }: { callsCollection: CollectionReference, localStream: any; callId: string }) {
 
-  const [status, setStatus] = useState(null);
+  const [status, setStatus] = useState(null)
 
   useEffect(() => {
-    let pc: any = null;
-    let remoteStream: MediaStream | null = null;
+    let pc: RTCPeerConnection | null = null
+    let remoteStream: MediaStream | null = null
+    let dataChannel: RTCDataChannel | null = null
 
     const joinCall = async () => {
-      const response = await fetch(`https://piano.metered.live/api/v1/turn/credentials?apiKey=${process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY}`);
-      const stunAndTurnServers = await response.json();
-      const servers = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };
+      const response = await fetch(`https://piano.metered.live/api/v1/turn/credentials?apiKey=${process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY}`)
+      const stunAndTurnServers = await response.json()
+      const servers = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 }
 
-      pc = new RTCPeerConnection(servers);
-      remoteStream = new MediaStream();
+      pc = new RTCPeerConnection(servers)
+      remoteStream = new MediaStream()
+      dataChannel = pc.createDataChannel("webtunnel")
+      dataChannel.send("Hello world!")
 
-      // Add tracks
       localStream.getTracks().forEach((track: any) => {
-        pc.addTrack(track, localStream);
-      });
+        if (pc) {pc.addTrack(track, localStream)}
+        else {console.error("peerConnection was null")}
+      })
 
-      // Handle onTrack
       pc.ontrack = (e: any) => {
         e.streams[0].getTracks().forEach((track: any) => {
-          if (remoteStream) {
-            remoteStream.addTrack(track);
-          }
-        });
-      };
-
-      if (!callId) {
-        console.error('callId not found');
-        return;
+          if (remoteStream) {remoteStream.addTrack(track)}
+          else {console.error("remoteStream was null")}
+        })
       }
 
-      const callDoc = doc(callsCollection, callId);
-      const answerCandidates = collection(callDoc, 'answerCandidates');
-      const offerCandidates = collection(callDoc, 'offerCandidates');
+      if (!callId) {
+        console.error('callId not found')
+        return
+      }
+
+      const callDoc = doc(callsCollection, callId)
+      const answerCandidates = collection(callDoc, 'answerCandidates')
+      const offerCandidates = collection(callDoc, 'offerCandidates')
 
       pc.onicecandidate = async (event: any) => {
         if (event.candidate) {
-          await setDoc(doc(answerCandidates), { ...event.candidate.toJSON() });
+          await setDoc(doc(answerCandidates), { ...event.candidate.toJSON() })
         }
-      };
+      }
       
-      const callData: any = (await getDoc(callDoc)).data();
-      const offerDescription = callData.offer;
-      await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
+      const callData: any = (await getDoc(callDoc)).data()
+      const offerDescription = callData.offer
+      await pc.setRemoteDescription(new RTCSessionDescription(offerDescription))
 
-      const answerDescription = await pc.createAnswer();
-      await pc.setLocalDescription(answerDescription);
+      const answerDescription = await pc.createAnswer()
+      await pc.setLocalDescription(answerDescription)
 
       const answer = {
         type: answerDescription.type,
         sdp: answerDescription.sdp,
-      };
+      }
 
-      await updateDoc(callDoc, { answer });
+      await updateDoc(callDoc, { answer })
 
       const unsubscribe = onSnapshot(offerCandidates, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
           if (change.type === 'added') {
-            const data = change.doc.data();
-            pc.addIceCandidate(new RTCIceCandidate(data));
+            const data = change.doc.data()
+             if (pc) {pc.addIceCandidate(new RTCIceCandidate(data))}
           }
-        });
-      });
+        })
+      })
 
-      // Cleanup on unmount
       return () => {
-        unsubscribe();
-        if (pc) {
-          pc.close();
-        }
-      };
-    };
+        unsubscribe()
+        if (pc) {pc.close()}
+      }
+    }
 
-    joinCall();
+    joinCall()
 
-  }, [localStream, callId]);  // Run effect only when localStream or callId changes
+  }, [localStream, callId])
 
   return (
     <>
       {status && <PcConnectionIcon state={status} />}
     </>
-  );
+  )
 }
 
 export function ListenerPanel() {
-  // const broadcastId = "VrIvTvpkA7Rp89v0k0bzwcfg6P92"
-  
+  const lastSeenAllowance = 40 * 60 * 1000
   const [broadcastIds, setBroadcastIds] = useState<string[]>([])
   const [broadcastId, setBroadcastId] = useState<string | null>(null)
-  // const broadcastDocRef = doc(collection(db, "broadcasts"), broadcastId)
-
-  const lastSeenAllowance = 40 * 60 * 1000
 
   useEffect(() => { // monitor firestore for new broadcasts
-    console.log("USE EFFECT")
     const unsubscribe = onSnapshot(
         query(collection(db, "broadcasts"),
         where("lastSeen", ">=", Timestamp.fromDate(new Date((Date.now() - lastSeenAllowance)))
         )), async (snapshot) => {
             setBroadcastIds(oldBroadcastIds => {
-                let newBroadcastIds = [...(oldBroadcastIds || [])];
+                let newBroadcastIds = [...(oldBroadcastIds || [])]
                 snapshot.docChanges().forEach((change) => {
-                    const id = change.doc.id;
+                    const id = change.doc.id
                     console.log(id)
                     if (id) {
                         if (change.type === "added") {
-                            console.log("doc " + id + " added");
-                            console.log(typeof change.doc.data().lastSeen, change.doc.data().lastSeen);
+                            console.log("doc " + id + " added")
+                            console.log(typeof change.doc.data().lastSeen, change.doc.data().lastSeen)
                             if (!newBroadcastIds.includes(id)) {
-                                newBroadcastIds.push(id);
+                                newBroadcastIds.push(id)
                             }
                         }
                         if (change.type === "modified") {
                             // handle any modifications if needed
                         }
                         if (change.type === "removed") {
-                            newBroadcastIds = newBroadcastIds.filter(broadcast => broadcast !== id);
+                            newBroadcastIds = newBroadcastIds.filter(broadcast => broadcast !== id)
                         }
                     }
-                });
-                console.log("newBroadcastIds", newBroadcastIds);
-                return newBroadcastIds;
-            });
+                })
+                console.log("newBroadcastIds", newBroadcastIds)
+                return newBroadcastIds
+            })
         }, (error) => {
-            console.error("Error in onSnapshot(collection(db, 'broadcasts'))::", error);
-        });
+            console.error("Error in onSnapshot(collection(db, 'broadcasts'))::", error)
+        })
 
-    return () => unsubscribe();
-  }, []);
+    return () => unsubscribe()
+  }, [])
 
   return (
     <>
@@ -545,114 +557,123 @@ export function BroadcastInfo({ id }: { id: string }) {
 }
 export function ListenerCall({ broadcastId} : { broadcastId: string}) {
 
+  const [broadcastData, setBroadcastData] = useState<object>({})
+  const [broadcasting, setBroadcasting] = useState<string>("unsure")
+  const [isCallStarted, setCallStarted] = useState(false)
+  const [seenRecently, setSeenRecently] = useState(false)
+  const [status, setStatus] = useState("null")
   const broadcastDocRef = doc(collection(db, "broadcasts"), broadcastId)
-  const [isCallStarted, setCallStarted] = useState(false);
-  const [status, setStatus] = useState("null");
-  const [broadcastData, setBroadcastData] = useState<object>({});
-  const [seenRecently, setSeenRecently] = useState(false);
-  const [broadcasting, setBroadcasting] = useState<string>("unsure");
   
-  let pc: RTCPeerConnection | any = null;
-  let localStream: any = null;
-  let remoteStream: any = null;
-  let unsubscribeDoc: any = null;
-  let unsubscribeCandidates: any = null;
+  let localStream: any = null
+  let pc: RTCPeerConnection | null = null
+  let remoteStream: MediaStream | null = null
+  let unsubscribeCandidates: any = null
+  let unsubscribeDoc: any = null
 
   const startCall = async () => {
       setCallStarted(true)
-      const response = await fetch(`https://piano.metered.live/api/v1/turn/credentials?apiKey=${process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY}`);
-      const stunAndTurnServers = await response.json();
-      const servers = { iceServers: stunAndTurnServers, iceCandidatePoolSize: 10 };
+      const response = await fetch(`https://piano.metered.live/api/v1/turn/credentials?apiKey=${process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY}`)
+      const stunAndTurnServers = await response.json()
+      const servers = {
+        iceServers: stunAndTurnServers,
+        iceCandidatePoolSize: 10,
+      }
 
-      pc = new RTCPeerConnection(servers);
-      localStream = new MediaStream();
-      remoteStream = new MediaStream();
+      pc = new RTCPeerConnection(servers)
+      localStream = new MediaStream()
+      remoteStream = new MediaStream()
       
-      localStream.addTrack((new AudioContext()).createMediaStreamDestination().stream.getAudioTracks()[0]);
+      localStream.addTrack((new AudioContext()).createMediaStreamDestination().stream.getAudioTracks()[0])
       localStream.getTracks().forEach((track: any) => {
-        pc.addTrack(track, localStream);
-      });
+        pc?.addTrack(track, localStream)
+      })
 
       pc.ontrack = (e: any) => {
         e.streams[0].getTracks().forEach((track: any) => {
-          remoteStream?.addTrack(track);
-        });
-      };
-
-      pc.onconnectionstatechange = (event: any) => {
-          setStatus(pc.connectionState);
+          remoteStream?.addTrack(track)
+        })
       }
 
-      const callDoc = collection(broadcastDocRef, "calls");
-      const callId = (await addDoc(callDoc, {})).id;
+      pc.ondatachannel = (event) => {
+        event.channel.onmessage = (msgevent) => {
+          console.log("RECEIVED::", JSON.stringify(msgevent.data))
+        }
+      }
 
-      // await updateDoc(doc(callDoc, 'newCalls'), { [callId]: { createdAt: serverTimestamp(), callId } });
+      pc.onconnectionstatechange = (event: any) => {
+        setStatus(pc ? pc.connectionState : "null")
+      }
 
-      const offerCandidates = collection(doc(callDoc, callId), 'offerCandidates');
-      const answerCandidates = collection(doc(callDoc, callId), 'answerCandidates');
+      const callDoc = collection(broadcastDocRef, "calls")
+      const callId = (await addDoc(callDoc, {})).id
+
+      // await updateDoc(doc(callDoc, 'newCalls'), { [callId]: { createdAt: serverTimestamp(), callId } })
+
+      const offerCandidates = collection(doc(callDoc, callId), 'offerCandidates')
+      const answerCandidates = collection(doc(callDoc, callId), 'answerCandidates')
 
       pc.onicecandidate = async (event: any) => {
         if (event.candidate) {
-          await setDoc(doc(offerCandidates), { ...event.candidate.toJSON() });
+          await setDoc(doc(offerCandidates), { ...event.candidate.toJSON() })
         }
-      };
+      }
 
-      const offerDescription = await pc.createOffer();
-      await pc.setLocalDescription(offerDescription);
-      await updateDoc(doc(callDoc, callId), { createdAt: serverTimestamp(), lastSeen: serverTimestamp(), offer: { sdp: offerDescription.sdp, type: offerDescription.type } });
+      const offerDescription = await pc.createOffer()
+      await pc.setLocalDescription(offerDescription)
+      await updateDoc(doc(callDoc, callId), { createdAt: serverTimestamp(), lastSeen: serverTimestamp(), offer: { sdp: offerDescription.sdp, type: offerDescription.type } })
 
       unsubscribeDoc = onSnapshot(doc(callDoc, callId), (snapshot) => {
-        const data = snapshot.data();
+        const data = snapshot.data()
         if (!pc?.currentRemoteDescription && data?.answer) {
-          const answerDescription = new RTCSessionDescription(data.answer);
-          pc?.setRemoteDescription(answerDescription);
+          const answerDescription = new RTCSessionDescription(data.answer)
+          pc?.setRemoteDescription(answerDescription)
         }
-      });
+      })
 
       unsubscribeCandidates = onSnapshot(answerCandidates, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
           if (change.type === 'added') {
-            const candidate = new RTCIceCandidate(change.doc.data());
-            pc?.addIceCandidate(candidate);
+            const candidate = new RTCIceCandidate(change.doc.data())
+            pc?.addIceCandidate(candidate)
           }
-        });
-      });
+        })
+      })
 
       setInterval(async () => {
         if (callId) {
-          await updateDoc(doc(callDoc, callId), { lastSeen: serverTimestamp() });
+          await updateDoc(doc(callDoc, callId), { lastSeen: serverTimestamp() })
         }
-      }, 120000);
+      }, 120000)
 
-      const theirWebcam: HTMLAudioElement = document.getElementById("audio-playback") as HTMLAudioElement;
-      theirWebcam.srcObject = remoteStream;
-      theirWebcam.play().catch(error => {console.error(error)});
-    };
+      const theirWebcam: HTMLAudioElement = document.getElementById("audio-playback") as HTMLAudioElement
+      theirWebcam.srcObject = remoteStream
+      theirWebcam.play().catch(error => {console.error(error)})
+    }
 
   const endCall = () => {
-    setCallStarted(false);
-    unsubscribeDoc && unsubscribeDoc();
-    unsubscribeCandidates && unsubscribeCandidates();
-    pc?.close();
-    pc = null;
-    localStream = null;
-    remoteStream = null;
-  };
+    setCallStarted(false)
+    unsubscribeDoc && unsubscribeDoc()
+    unsubscribeCandidates && unsubscribeCandidates()
+    pc?.close()
+    pc = null
+    localStream = null
+    remoteStream = null
+  }
   
   const fetchBroadcastData = async () => {
-      const callData: any = (await getDoc(broadcastDocRef)).data();
-      setBroadcastData(callData);
+      const callData: any = (await getDoc(broadcastDocRef)).data()
+      setBroadcastData(callData)
       console.log(callData?.lastSeen.seconds, Math.round(Date.now() / 1000), Math.round(Date.now() / 1000) - callData?.lastSeen.seconds)
       if (Math.round(Date.now() / 1000) - callData?.lastSeen.seconds < 7 * 60) setBroadcasting("yes")
-      else setBroadcasting("no");
+      else setBroadcasting("no")
   }
 
   useEffect(() => {
-      fetchBroadcastData();
+      fetchBroadcastData()
     return () => {
-      endCall();
-    };
-  }, []);
+      endCall()
+    }
+  }, [])
 
   return (
       <>
@@ -702,7 +723,7 @@ export function ListenerCall({ broadcastId} : { broadcastId: string}) {
       ) : null}
       <p>{JSON.stringify(broadcastData)}</p>
     </>
-  );
+  )
 }
 
 export function Webcall() {

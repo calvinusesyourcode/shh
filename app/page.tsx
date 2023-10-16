@@ -54,7 +54,7 @@ function Fancy({ title, subtitle, description, typedText, colors, cousin=<></>, 
               {cousin}
               <div className="flex flex-col my-[10rem] items-center text-center">
                   <p className={`drop-shadow-custom1 bg-clip-text text-transparent max-w-[20rem] font-medium text-5xl pb-4 pt-2`} style={{ backgroundImage: `linear-gradient(to bottom right, ${colors[0]}, ${colors[1]})`}}>
-                    {`${title}`}
+                    {title}
                     {typedText && (<TypingText textArray={typedText} interval={6}/>)}
                   </p>
                   <p className="drop-shadow-custom1 max-w-[30rem] text-xl font-normal">{subtitle}</p>
