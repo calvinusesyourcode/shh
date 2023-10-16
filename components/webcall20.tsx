@@ -392,14 +392,12 @@ export function BroadcastCall({ callsCollection, localStream, callId }: { callsC
 
       pc = new RTCPeerConnection(servers)
       remoteStream = new MediaStream()
-      dataChannel = pc.createDataChannel("webtunnel")
-      dataChannel.send("Hello world!")
-
+      
       localStream.getTracks().forEach((track: any) => {
         if (pc) {pc.addTrack(track, localStream)}
         else {console.error("peerConnection was null")}
       })
-
+      
       pc.ontrack = (e: any) => {
         e.streams[0].getTracks().forEach((track: any) => {
           if (remoteStream) {remoteStream.addTrack(track)}
@@ -433,18 +431,22 @@ export function BroadcastCall({ callsCollection, localStream, callId }: { callsC
         type: answerDescription.type,
         sdp: answerDescription.sdp,
       }
-
+      
       await updateDoc(callDoc, { answer })
-
+      
+      
       const unsubscribe = onSnapshot(offerCandidates, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
           if (change.type === 'added') {
             const data = change.doc.data()
-             if (pc) {pc.addIceCandidate(new RTCIceCandidate(data))}
+            if (pc) {pc.addIceCandidate(new RTCIceCandidate(data))}
           }
         })
       })
-
+      
+      dataChannel = pc.createDataChannel("webtunnel")
+      dataChannel.send("Hello world!")
+      
       return () => {
         unsubscribe()
         if (pc) {pc.close()}
