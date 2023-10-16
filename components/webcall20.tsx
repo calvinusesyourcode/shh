@@ -19,7 +19,7 @@ import {
   FieldValue,
   DocumentReference
 } from "firebase/firestore"
-import { useContext, useEffect, useState, useRef } from "react"
+import { useContext, useEffect, useState, useRef, useReducer } from "react"
 import {
   Dialog,
   DialogContent,
@@ -393,22 +393,32 @@ export function BroadcastHandler({ localStream, config, data }: { localStream: M
 }
 export function BroadcastCall({ callsCollection, localStream, callId, data }: { callsCollection: CollectionReference, localStream: any, callId: string, data: any }) {
 
-  const [dataChannel, setDataChannel] = useState<RTCDataChannel | null>(null)
+  const [dc, setDC] = useState<RTCDataChannel | null>(null)
   const [status, setStatus] = useState(null)
+  const [queue, setQueue] = useState<any>([])
   
   useEffect(() => {
-    console.log("1432, data was updated")
-      if (dataChannel) {
-        const dataString = JSON.stringify(data)
-        console.log("trying to send data:", dataString)
-        dataChannel.send(dataString)
-      }
+    if (dc) {
+      setQueue((queue: string[]) => {
+        for (let i = 0, l = queue.length; i < l; i++) {
+          const item = queue.shift()
+          if (item) {dc.send(item)}
+        }
+        return []
+      })
+      dc.send(data)
+    } else {
+      setQueue((queue: string[]) => {
+        if (queue) {return [...queue, data]}
+        else {return [data]}
+      })
+    }
   }, [data])
 
   useEffect(() => {
     let pc: RTCPeerConnection | null = null
     let remoteStream: MediaStream | null = null
-    let myDataChannel: RTCDataChannel | null = null
+    let dc: RTCDataChannel | null = null
 
     const joinCall = async () => {
       const response = await fetch(`https://piano.metered.live/api/v1/turn/credentials?apiKey=${process.env.NEXT_PUBLIC_TURN_SERVER_API_KEY}`)
@@ -417,8 +427,12 @@ export function BroadcastCall({ callsCollection, localStream, callId, data }: { 
 
       pc = new RTCPeerConnection(servers)
       remoteStream = new MediaStream()
-      myDataChannel = pc.createDataChannel("webtunnel")
-      setDataChannel(myDataChannel)
+      dc = pc.createDataChannel("webtunnel")
+
+      dc.onopen = (event) => {
+        console.log("data channel open!", JSON.stringify(event))
+        setDC(dc)
+      }
       
       localStream.getTracks().forEach((track: any) => {
         if (pc) {pc.addTrack(track, localStream)}
