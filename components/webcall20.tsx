@@ -395,25 +395,11 @@ export function BroadcastCall({ callsCollection, localStream, callId, data }: { 
 
   const [dc, setDC] = useState<RTCDataChannel | null>(null)
   const [status, setStatus] = useState(null)
-  const [queue, setQueue] = useState<any>([])
+  // const [queue, setQueue] = useState<any>([])
   
   useEffect(() => {
-    if (dc) {
-      setQueue((queue: string[]) => {
-        for (let i = 0, l = queue.length; i < l; i++) {
-          const item = queue.shift()
-          if (item) {dc.send(item)}
-        }
-        return []
-      })
-      dc.send(data)
-    } else {
-      setQueue((queue: string[]) => {
-        if (queue) {return [...queue, data]}
-        else {return [data]}
-      })
-    }
-    console.log("message queue: ", queue)
+    if (dc) {dc.send(data)}
+    else {console.error("dc is null")}
   }, [data])
 
   useEffect(() => {
