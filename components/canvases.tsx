@@ -190,9 +190,9 @@ export function BeautifulGradientCanvas({startColor, endColor, isVisible}: {star
       render();
 
       const opacityFade = () => {
-        context.globalAlpha -= 0.1;
+        context.globalAlpha -= 0.05;
         if (context.globalAlpha > 0.1) {
-          setTimeout(() => {opacityFade()}, 200)
+          setTimeout(() => {opacityFade()}, 100)
         } else {
           context.globalAlpha = 0;
         }

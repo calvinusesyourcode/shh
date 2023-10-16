@@ -413,6 +413,7 @@ export function BroadcastCall({ callsCollection, localStream, callId, data }: { 
         else {return [data]}
       })
     }
+    console.log("message queue: ", queue)
   }, [data])
 
   useEffect(() => {
@@ -635,6 +636,8 @@ export function ListenerCall({ broadcastId} : { broadcastId: string}) {
       }
 
       pc.ondatachannel = (event) => {
+        console.log("dataChannel event!", event)
+        console.log("dataChannel event.channel!", event.channel)
         event.channel.onmessage = (msgevent) => {
           setDataReceived((oldData: any) => {
             if (oldData) {return [...oldData, msgevent.data]}
