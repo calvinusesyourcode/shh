@@ -182,9 +182,9 @@ export function BroadcasterPanel({ user }: { user: any }) {
     try {
       const localStreamObject = await navigator.mediaDevices.getUserMedia(constraints)
       setLocalStream(localStreamObject)
-      const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement
-      myWebcam.srcObject = localStreamObject
-      myWebcam.play().catch((error) => {console.log(error)})
+      // const myWebcam: HTMLVideoElement = document.getElementById("my-webcam") as HTMLVideoElement
+      // myWebcam.srcObject = localStreamObject
+      // myWebcam.play().catch((error) => {console.log(error)})
     } catch (error) {
       console.error(error)
     }
@@ -417,6 +417,11 @@ export function BroadcastCall({ callsCollection, localStream, callId, data }: { 
       dc = pc.createDataChannel("tunnel")
       console.log("dcstate", dc.readyState)
       
+      dc.addEventListener("open", (event) => {
+        console.log("data channel open!!!@")
+        setDC(dc)
+      })
+
       dc.onopen = (event) => {
         console.log("data channel open!", JSON.stringify(event))
         setDC(dc)
