@@ -428,13 +428,17 @@ export function BroadcastCall({ callsCollection, localStream, callId, data }: { 
 
       pc = new RTCPeerConnection(servers)
       remoteStream = new MediaStream()
-      dc = pc.createDataChannel("webtunnel")
-
+      dc = pc.createDataChannel("tunnel")
+      
       dc.onopen = (event) => {
         console.log("data channel open!", JSON.stringify(event))
         setDC(dc)
       }
-      
+
+      dc.onerror = (event) => {
+        console.error("dc.onerror", JSON.stringify(event))
+      }
+            
       localStream.getTracks().forEach((track: any) => {
         if (pc) {pc.addTrack(track, localStream)}
         else {console.error("peerConnection was null")}
