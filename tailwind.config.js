@@ -17,7 +17,7 @@ module.exports = {
     },
     extend: {
       dropShadow: {
-        'custom1': '4px 4px 10px rgba(0, 0, 0, 1)',
+        'custom1': '4px 4px 10px hsl(var(--background))',
       },
       imageRendering: ['pixelated', 'crisp-edges'],
       colors: {

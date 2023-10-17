@@ -20,27 +20,35 @@ export default function IndexPage() {
         colors={["#3b82f6","#ec4899"]}
         subtitle="free forever decentralized streaming"
         description={<p>a project by <Link href="https://calvin.art" className="underline">calvin.art</Link></p>}
-        buttons={["broadcast", "listen"]}
+        buttons={[["broadcast","/broadcast"], ["listen", "/listen"]]}
         />
       <Fancy
         title={<span>inspired by <i>chill lofi beats to study to</i></span>}
         colors={["#eab308","#22c55e"]}
         subtitle='soothing sound waves but "shhhhh" quiet'
         description="using electromagnetic waves instead"
-        buttons={["how it works"]}
+        buttons={[["how it works","/how-it-works"]]}
         />
       <Fancy
         title="scientifically vibe-worthy"
         colors={["#f97316","#a855f7"]}
         subtitle="music as mental massage"
         description="researchers find that a 10-30 minute break of music listening can improve flow state"
+        buttons={[["neuroscience of music","/huberman"]]}
+      />
+      <Fancy
+        title="evolving like a pokemon"
+        colors={["#55ff55","#5555ff"]}
+        subtitle="contributions welcome!"
+        description={<p>built by and for the UBC community,<br/>star the project on github!</p>}
+        buttons={[["request a feature","/feedback"],["github","https://github.com/calvinusesyourcode/shh"]]}
       />
     </div>
     </>
   )
 }
 
-function Fancy({ title, subtitle, description, typedText, colors, cousin=<></>, buttons=[] }: { title: React.ReactNode, subtitle: string, description: React.ReactNode, typedText?: string[], colors: string[], cousin?: React.ReactNode, buttons?: string[] }) {
+function Fancy({ title, subtitle, description, typedText, colors, cousin=<></>, buttons=[] }: { title: React.ReactNode, subtitle: string, description: React.ReactNode, typedText?: string[], colors: string[], cousin?: React.ReactNode, buttons?: string[] | string[][] }) {
   const [isVisible, ref]: [boolean, RefObject<HTMLDivElement>] = useIntersectionObserver(true)
   const customClass = isVisible ? `animate-fade-in` : `opacity-0`
   
@@ -59,15 +67,15 @@ function Fancy({ title, subtitle, description, typedText, colors, cousin=<></>, 
                       {typedText && (<TypingText textArray={typedText} interval={6}/>)}
                     </p>
                     <p className="drop-shadow-custom1 max-w-[30rem] text-xl font-normal">{subtitle}</p>
-                    <div className="drop-shadow-custom1 max-w-[30rem] text-xl font-extralight text-muted-foreground">{description}</div>
+                    <div className="drop-shadow-custom1 max-w-[30rem] text-xl font-extralight text-muted-foreground px-2">{description}</div>
                     {buttons.length != 0 && (
                       <div className="flex gap-3 my-3">
-                        {buttons.map((name, i) => (
+                        {buttons.map((item, i) => (
                           <>
                           {buttons.length == i+1 ? (
-                            <Link key={i} className={buttonVariants({variant:"gradient"})} href={`/${name.replace(/ /g, "-")}`} style={{  backgroundImage: `linear-gradient(to bottom right, ${colors[0]}, ${colors[1]})` }}>{name}</Link>
+                            <Link key={i} className={buttonVariants({variant:"gradient"})} href={item[1]} style={{  backgroundImage: `linear-gradient(to bottom right, ${colors[0]}, ${colors[1]})` }}>{item[0]}</Link>
                             ) : (
-                              <Link key={i} className={buttonVariants({variant:"outline"})} href={`/${name.replace(/ /g, "-")}`}>{name}</Link>
+                              <Link key={i} className={buttonVariants({variant:"outline"})} href={item[1]}>{item[0]}</Link>
                               )}
                           </>
                         ))}

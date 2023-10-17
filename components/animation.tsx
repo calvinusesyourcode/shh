@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, RefObject } from 'react';
+import { gradientSteps } from '@/lib/test';
 
 export function AnimateOnceVisible({ animationClass, children, once=true }: { animationClass: string, children: any, once?: boolean }) {
     const [isVisible, setIsVisible] = useState(false);
@@ -103,4 +104,39 @@ export function TypingText({ textArray, interval }: { textArray: string[], inter
         <span>{`${displayedText}`}</span>
       </>
     );
-} 
+}
+
+const DynamicGradientText = ({ startColor, endColor, children }: { startColor: string, endColor: string, children: React.ReactNode }) => {
+  const colorSteps = gradientSteps(startColor, endColor, 20)
+  const [stepIndex, setStepIndex] = useState(0)
+
+  if (colorSteps) {
+    useEffect(() => {
+      const intervalId = setInterval(() => {
+        setStepIndex((prevIndex) => {
+          return (prevIndex + 1) % colorSteps.length;
+        });
+      }, 1000);
+      
+      return () => clearInterval(intervalId);
+    }, [colorSteps.length]);
+  }
+
+  return (
+    <>
+    {colorSteps && (
+      <>
+        <p className={`drop-shadow-custom1 bg-clip-text text-transparent max-w-[20rem] font-medium text-5xl pb-4 pt-2`}
+        style={{ backgroundImage: `linear-gradient(to bottom right, ${colorSteps[stepIndex]}, ${colorSteps[(stepIndex + colorSteps.length - 1) % colorSteps.length]})`}}
+        >
+        {children}
+        </p>
+        <p>{stepIndex}</p>
+        <p>{(stepIndex + colorSteps.length - 1) % colorSteps.length}</p>
+        </>
+    )}
+    </>
+  )
+}
+
+export default DynamicGradientText;
