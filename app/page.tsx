@@ -23,7 +23,7 @@ export default function IndexPage() {
         buttons={["broadcast", "listen"]}
         />
       <Fancy
-        title="inspired by chill lofi beats to study to"
+        title={<span>inspired by <i>chill lofi beats to study to</i></span>}
         colors={["#eab308","#22c55e"]}
         subtitle='soothing sound waves but "shhhhh" quiet'
         description="using electromagnetic waves instead"
@@ -40,7 +40,7 @@ export default function IndexPage() {
   )
 }
 
-function Fancy({ title, subtitle, description, typedText, colors, cousin=<></>, buttons=[] }: { title: string, subtitle: string, description: React.ReactNode, typedText?: string[], colors: string[], cousin?: React.ReactNode, buttons?: string[] }) {
+function Fancy({ title, subtitle, description, typedText, colors, cousin=<></>, buttons=[] }: { title: React.ReactNode, subtitle: string, description: React.ReactNode, typedText?: string[], colors: string[], cousin?: React.ReactNode, buttons?: string[] }) {
   const [isVisible, ref]: [boolean, RefObject<HTMLDivElement>] = useIntersectionObserver(true)
   const customClass = isVisible ? `animate-fade-in` : `opacity-0`
   
@@ -64,9 +64,9 @@ function Fancy({ title, subtitle, description, typedText, colors, cousin=<></>, 
                       {buttons.map((name, i) => (
                         <>
                         {buttons.length == i+1 ? (
-                          <Link key={name} className={buttonVariants({variant:"gradient"})} href={`/${name.replace(/ /g, "-")}`} style={{  backgroundImage: `linear-gradient(to bottom right, ${colors[0]}, ${colors[1]})` }}>{name}</Link>
+                          <Link key={i} className={buttonVariants({variant:"gradient"})} href={`/${name.replace(/ /g, "-")}`} style={{  backgroundImage: `linear-gradient(to bottom right, ${colors[0]}, ${colors[1]})` }}>{name}</Link>
                           ) : (
-                            <Link key={name} className={buttonVariants({variant:"outline"})} href={`/${name.replace(/ /g, "-")}`}>{name}</Link>
+                            <Link key={i} className={buttonVariants({variant:"outline"})} href={`/${name.replace(/ /g, "-")}`}>{name}</Link>
                         )}
                         </>
                       ))}
