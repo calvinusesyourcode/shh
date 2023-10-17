@@ -15,8 +15,8 @@ export default function IndexPage() {
     <div className="flex flex-col min-h-screen">
       <Fancy
         cousin={<SiteHeader home={true}/>}
-        title="open-source peer-to-peer live"
-        typedText={[" music"," podcasts","streams"]}
+        title="open-source peer-to-peer "
+        typedText={["live music","live podcasts","livestreams"]}
         colors={["#3b82f6","#ec4899"]}
         subtitle="free forever decentralized streaming"
         description={<p>a project by <Link href="https://calvin.art" className="underline">calvin.art</Link></p>}
@@ -52,26 +52,28 @@ function Fancy({ title, subtitle, description, typedText, colors, cousin=<></>, 
             </div>
             <div className="absolute z-30 w-full h-full">
               {cousin}
-              <div className="flex flex-col my-[10rem] items-center text-center">
-                  <p className={`drop-shadow-custom1 bg-clip-text text-transparent max-w-[20rem] font-medium text-5xl pb-4 pt-2`} style={{ backgroundImage: `linear-gradient(to bottom right, ${colors[0]}, ${colors[1]})`}}>
-                    {title}
-                    {typedText && (<TypingText textArray={typedText} interval={6}/>)}
-                  </p>
-                  <p className="drop-shadow-custom1 max-w-[30rem] text-xl font-normal">{subtitle}</p>
-                  <div className="drop-shadow-custom1 max-w-[30rem] text-xl font-extralight text-muted-foreground">{description}</div>
-                  {buttons.length != 0 && (
-                    <div className="flex gap-3 my-3">
-                      {buttons.map((name, i) => (
-                        <>
-                        {buttons.length == i+1 ? (
-                          <Link key={i} className={buttonVariants({variant:"gradient"})} href={`/${name.replace(/ /g, "-")}`} style={{  backgroundImage: `linear-gradient(to bottom right, ${colors[0]}, ${colors[1]})` }}>{name}</Link>
-                          ) : (
-                            <Link key={i} className={buttonVariants({variant:"outline"})} href={`/${name.replace(/ /g, "-")}`}>{name}</Link>
-                        )}
-                        </>
-                      ))}
-                    </div>
-                  )}
+              <div className="flex flex-col align-center h-full">
+                <div className="flex flex-col my-[10rem] items-center justify-center -translate-y-10 text-center h-full">
+                    <p className={`drop-shadow-custom1 bg-clip-text text-transparent max-w-[20rem] font-medium text-5xl pb-4 pt-2`} style={{ backgroundImage: `linear-gradient(to bottom right, ${colors[0]}, ${colors[1]})`}}>
+                      {title}
+                      {typedText && (<TypingText textArray={typedText} interval={6}/>)}
+                    </p>
+                    <p className="drop-shadow-custom1 max-w-[30rem] text-xl font-normal">{subtitle}</p>
+                    <div className="drop-shadow-custom1 max-w-[30rem] text-xl font-extralight text-muted-foreground">{description}</div>
+                    {buttons.length != 0 && (
+                      <div className="flex gap-3 my-3">
+                        {buttons.map((name, i) => (
+                          <>
+                          {buttons.length == i+1 ? (
+                            <Link key={i} className={buttonVariants({variant:"gradient"})} href={`/${name.replace(/ /g, "-")}`} style={{  backgroundImage: `linear-gradient(to bottom right, ${colors[0]}, ${colors[1]})` }}>{name}</Link>
+                            ) : (
+                              <Link key={i} className={buttonVariants({variant:"outline"})} href={`/${name.replace(/ /g, "-")}`}>{name}</Link>
+                              )}
+                          </>
+                        ))}
+                      </div>
+                    )}
+                </div>
               </div>
             </div>
           </div>
