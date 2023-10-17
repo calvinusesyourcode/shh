@@ -431,10 +431,12 @@ export function BroadcastCall({ callsCollection, localStream, callId, data }: { 
         console.error("dc.onerror", JSON.stringify(event))
       }
             
-      // localStream.getTracks().forEach((track: any) => {
-      //   if (pc) {pc.addTrack(track, localStream)}
-      //   else {console.error("peerConnection was null")}
-      // })
+      localStream.getTracks().forEach((track: any) => {
+        if (pc) {pc.addTrack(track, localStream)}
+        else {console.error("peerConnection was null")}
+      })
+
+      console.log("pc config",pc.getConfiguration())
       
       pc.onconnectionstatechange = (event) => {
         if (pc) {setStatus(pc.connectionState)}
