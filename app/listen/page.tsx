@@ -1,4 +1,4 @@
-import { ListenerPanel } from "@/components/webcall20";
+import { ListenerPanel } from "@/components/webcall";
 
 export default function ListenPage() {
     return (

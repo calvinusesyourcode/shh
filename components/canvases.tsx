@@ -326,3 +326,118 @@ export function BeautifulPianoCanvas({startColor, endColor, isVisible}: {startCo
   </>
   );
 }
+
+export function DrawMediaStream({variable, varMax, svg1, svg2}: {variable: number, varMax: number, svg1: React.ReactNode, svg2: React.ReactNode}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext("2d");
+    if (canvas && context) {
+    const width = canvas.width
+    const height = canvas.height
+
+    context.globalAlpha = 1
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.strokeStyle = "#ffffff"
+    
+    const points: {x: number, y: number, vx: number, vy: number, s: number}[] = [];
+    for (let i = 0; i < 10; i++) {
+      points.push({
+        x: -(i*5),
+        y: 20,
+        vx: 0,
+        vy: 0,
+        s: 0
+      })
+    }
+
+    const render = () => {
+      // context.clearRect(0,0,width,height)
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i]
+        // if (p.x <= 2) {p.s = variable}
+        context.lineWidth = p.s
+
+        context.beginPath();
+        context.moveTo(p.x, p.y);
+
+        p.x += 1
+        context.lineTo(p.x, p.y);
+        context.stroke()
+        if (p.x > width && Math.random() > 0.99) {p.x = 0; p.s = variable}
+        // p.vx *= 0.99;
+        // p.vy *= 0.99;
+
+      }
+
+      requestAnimationFrame(render);
+    }
+    render();
+    }
+  }, [variable])
+
+  return (
+    <>
+    <canvas ref={canvasRef} width="200" height="200"/>
+    </>
+  )
+}
+
+export function DrawMediaStream2({variable, varMax, svg1, svg2}: {variable: number, varMax: number, svg1: React.ReactNode, svg2: React.ReactNode}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const audioLevels = useRef<number[]>([]); // to store audio levels
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext("2d");
+    
+    if (canvas && context) {
+      const width = canvas.width
+      const height = canvas.height
+
+      context.globalAlpha = 1;
+      // context.imageSmoothingEnabled = true;
+      // context.imageSmoothingQuality = 'high';
+      context.strokeStyle = "#ffffff";
+
+      audioLevels.current.unshift(variable)
+      if (audioLevels.current.length > width) {
+        audioLevels.current.pop()
+      }
+
+      const render = () => {
+        context.clearRect(0, 0, width, height); // Clear canvas
+        context.lineWidth = 2; // Constant line width
+        context.beginPath();
+
+        // Draw audio levels
+        for (let i = 0; i < audioLevels.current.length; i++) {
+          const level = audioLevels.current[i]
+          const y = height - (level / varMax) * height
+          if (i === 0) {
+            context.moveTo(i, y);
+          } else {
+            context.lineTo(i, y);
+          }
+        }
+
+        context.stroke();
+        requestAnimationFrame(render);
+      };
+
+      render();
+    }
+  }, [variable]);
+
+  return (
+    <>
+      <div className='flex'>
+        {svg1 && (svg1)}
+        <canvas ref={canvasRef} width="200" height="200"/>
+        {svg2 && (svg2)}
+      </div>
+    </>
+  );
+}

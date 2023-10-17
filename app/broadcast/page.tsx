@@ -2,7 +2,7 @@
 
 import { SiteHeader } from "@/components/site-header";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { BroadcasterPanel } from "@/components/webcall20";
+import { BroadcasterPanel } from "@/components/webcall";
 import { AppContext } from "@/lib/context";
 import { useContext, useEffect, useState } from "react";
 import { signInWithPopup } from "firebase/auth";

@@ -52,6 +52,8 @@ import { Switch } from "@/components/ui/switch"
 import { PcConnectionIcon } from "./pc-connection-icon"
 import Image from "next/image"
 import { Textarea } from "@/components/ui/textarea"
+import { SvgIcon } from "@/components/svgs"
+import { DrawMediaStream, DrawMediaStream2 } from "./canvases"
 
 
 export function BroadcasterPanel({ user }: { user: any }) {
@@ -251,95 +253,94 @@ export function BroadcasterPanel({ user }: { user: any }) {
   return (
     <>
     {!broadcasting && (
-      <Card className="max-w-[500px] self-center">
-        <CardHeader>
-          <CardTitle>Broadcast Settings</CardTitle>
-          <CardDescription>*must be set <i>before</i> the broadcast begins*</CardDescription>
-        </CardHeader>
-        <CardContent>
-        <div className="flex flex-col gap-3 items-end">
-        <Select onValueChange={(value) => {onValueChange(value, "broadcastType")}}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder={broadcastType} />
-          </SelectTrigger>
-          <SelectContent>
-            {broadcastTypes.map((item, index) => (
-              <SelectItem key={index} value={item}>{item}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-          {showInputSettings && <Select onValueChange={(value) => {onValueChange(value, "audioInput")}}>
-            <SelectTrigger className="w-[260px]">
-              <SelectValue placeholder={audioInput.label} />
+      <>
+        <Card className="max-w-[500px] self-center">
+          <CardHeader>
+            <CardTitle>Broadcast Settings</CardTitle>
+            <CardDescription>*must be set <i>before</i> the broadcast begins*</CardDescription>
+          </CardHeader>
+          <CardContent>
+          <div className="flex flex-col gap-3 items-end">
+          <Select onValueChange={(value) => {onValueChange(value, "broadcastType")}}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder={broadcastType} />
             </SelectTrigger>
             <SelectContent>
-            {audioInputs.map((option, index) => (
-              <SelectItem key={index} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
+              {broadcastTypes.map((item, index) => (
+                <SelectItem key={index} value={item}>{item}</SelectItem>
+              ))}
             </SelectContent>
-          </Select>}
-          <Progress value={audioInputLevel} className="w-[260px]"/>
-          {(!audioOnly && showInputSettings)&& <Select onValueChange={(value) => {onValueChange(value, "videoInput")}}>
-            <SelectTrigger className="w-[260px]">
-              <SelectValue placeholder={videoInput.label} />
-            </SelectTrigger>
-            <SelectContent>
-            {videoInputs.map((option, index) => (
-              <SelectItem key={index} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-            </SelectContent>
-          </Select>}
-        <div className="flex items-center justify-end space-x-2">
-          <Label htmlFor="anonymousSwitch">Anonymous</Label>
-          <Switch
-            id="anonymousSwitch"
-            checked={anon}
-            onCheckedChange={() => setAnon(!anon)}
-          />
-        </div>
-        {!anon &&
-        <>
-        <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="nameInput" className="text-right">Name</Label>
-            <Input id="nameInput" value={name} className="col-span-3" placeholder={user.displayName} onChange={(event) => {setName(event.target.value)}}/>
-        </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="msgInput" className="text-right">Msg</Label>
-            <Textarea id="msgInput" value={msg} className="col-span-3" placeholder={msgPlaceholder} onChange={(event) => {setMsg(event.target.value)}}/>
-        </div>
-        </>
-        }
-        <div className="flex items-center justify-end space-x-2">
-          <Label htmlFor="audio-only" className="text-muted-foreground">Video Transmission </Label>
-          <Switch
-            id="audio-only"
-            checked={!audioOnly}
-          />
-        </div>
-        </div>
-        </CardContent>
-        <CardFooter className="flex justify-end gap-3">
-          <p className="text-muted-foreground">{audioInputLevel == 0 ? "no audio detected" : audioInputLevel < audioMinimum ? "audio very quiet" : ""}</p>
-          <Button disabled={starting} className={buttonVariants({variant: audioInputLevel < audioMinimum ? "outline" : "default"})} onClick={() => attemptBroadcast()}>Go live!</Button>  
-        </CardFooter>
-      </Card>
+          </Select>
+            {showInputSettings && <Select onValueChange={(value) => {onValueChange(value, "audioInput")}}>
+              <SelectTrigger className="w-[260px]">
+                <SelectValue placeholder={audioInput.label} />
+              </SelectTrigger>
+              <SelectContent>
+              {audioInputs.map((option, index) => (
+                <SelectItem key={index} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+              </SelectContent>
+            </Select>}
+            <Progress value={audioInputLevel} className="w-[260px]"/>
+            {(!audioOnly && showInputSettings)&& <Select onValueChange={(value) => {onValueChange(value, "videoInput")}}>
+              <SelectTrigger className="w-[260px]">
+                <SelectValue placeholder={videoInput.label} />
+              </SelectTrigger>
+              <SelectContent>
+              {videoInputs.map((option, index) => (
+                <SelectItem key={index} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+              </SelectContent>
+            </Select>}
+          <div className="flex items-center justify-end space-x-2">
+            <Label htmlFor="anonymousSwitch">Anonymous</Label>
+            <Switch
+              id="anonymousSwitch"
+              checked={anon}
+              onCheckedChange={() => setAnon(!anon)}
+            />
+          </div>
+          {!anon &&
+          <>
+          <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="nameInput" className="text-right">Name</Label>
+              <Input id="nameInput" value={name} className="col-span-3" placeholder={user.displayName} onChange={(event) => {setName(event.target.value)}}/>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="msgInput" className="text-right">Msg</Label>
+              <Textarea id="msgInput" value={msg} className="col-span-3" placeholder={msgPlaceholder} onChange={(event) => {setMsg(event.target.value)}}/>
+          </div>
+          </>
+          }
+          <div className="flex items-center justify-end space-x-2">
+            <Label htmlFor="audio-only" className="text-muted-foreground">Video Transmission </Label>
+            <Switch
+              id="audio-only"
+              checked={!audioOnly}
+            />
+          </div>
+          </div>
+          </CardContent>
+          <CardFooter className="flex justify-end gap-3">
+            <p className="text-muted-foreground">{audioInputLevel == 0 ? "no audio detected" : audioInputLevel < audioMinimum ? "audio very quiet" : ""}</p>
+            <Button disabled={starting} className={buttonVariants({variant: audioInputLevel < audioMinimum ? "outline" : "default"})} onClick={() => attemptBroadcast()}>Go live!</Button>  
+          </CardFooter>
+        </Card>
+      </>
     )}
     {(broadcasting && localStream && config) && (
       <>
       <BroadcastHandler localStream={localStream} config={config} data={dataStream}/>
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Textarea id="msgInput" value={msg} className="col-span-3" placeholder={msgPlaceholder} onChange={(event) => {setMyData(event.target.value)}}/>
-        <Button onClick={() => setDataStream(myData)} className={buttonVariants({variant:"outline"})}>Send</Button>
-      </div>
       </>
     )}
     </>
   )
 }
+
 export function BroadcastHandler({ localStream, config, data }: { localStream: MediaStream, config: {name: string, message: string, lastSeen: FieldValue, startedAt: FieldValue, audioOnly: boolean, uid: string}, data: any}) {
 
   const [callIds, setCallIds] = useState<string[]>([])
@@ -578,7 +579,7 @@ export function BroadcastInfo({ id }: { id: string }) {
     setData(theData)
     setAgo(() => {
       const secondsBetween = (Date.now() / 1000) - (theData?.lastSeen?.seconds)
-      return "started streaming " + (secondsBetween > 60 ? Math.floor(secondsBetween/60).toString() + " minutes ago" : Math.floor(secondsBetween).toString() + " seconds ago")
+      return "began " + (secondsBetween > 60 ? Math.floor(secondsBetween/60).toString() + " minutes ago" : Math.floor(secondsBetween).toString() + " seconds ago")
     })
   }
   useEffect(() => {
@@ -588,11 +589,16 @@ export function BroadcastInfo({ id }: { id: string }) {
   return (
     <>
       <div className="p-3 pt-1">
-        <div className="flex gap-2 items-center">
-          <h1 className="text-lg font-bold">{data?.name}</h1>
-          <p className="text-muted-foreground text-xs">{ago}</p>
+        <div className="flex flex-col">
+          <div className="flex gap-2 items-center">
+            <h1 className="text-lg font-bold">{data?.name}</h1>
+            <p className="text-muted-foreground text-xs">{ago}</p>
+          </div>
+          <div className="flex gap-1">
+            {data?.type.toString().toLowerCase().includes("music") ? (<SvgIcon.MusicNote size="24px" />) : (<SvgIcon.Microphone size="24px" />)}
+            <p className="text-muted-foreground text-sm">{data?.message}</p>
+          </div>
         </div>
-        <p className="text-muted-foreground text-sm">{data?.message}</p>
       </div>
     </>
   )
@@ -782,7 +788,6 @@ export function Webcall() {
     return (
         <>
             {(user && role == "admin") ? <BroadcasterPanel user={user}/> : <ListenerPanel />}
-            {/* <BroadcasterPanel user={{uid: "VrIvTvpkA7Rp89v0k0bzwcfg6P92", displayName: "Calvin"}}/> */}
         </>
     )
 }
