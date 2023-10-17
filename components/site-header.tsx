@@ -10,7 +10,7 @@ export function SiteHeader({home=false}) {
       </div>
     ) : (
       <div className="flex gap-1 text-xl justify-center mt-1">
-        <span className="font-extrabold">shh</span>
+        <span className="font-bold">shh</span>
       </div>
     )}
     </>

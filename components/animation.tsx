@@ -110,8 +110,8 @@ const DynamicGradientText = ({ startColor, endColor, children }: { startColor: s
   const colorSteps = gradientSteps(startColor, endColor, 20)
   const [stepIndex, setStepIndex] = useState(0)
 
-  if (colorSteps) {
-    useEffect(() => {
+  useEffect(() => {
+      if (colorSteps) {
       const intervalId = setInterval(() => {
         setStepIndex((prevIndex) => {
           return (prevIndex + 1) % colorSteps.length;
@@ -119,8 +119,8 @@ const DynamicGradientText = ({ startColor, endColor, children }: { startColor: s
       }, 1000);
       
       return () => clearInterval(intervalId);
-    }, [colorSteps.length]);
-  }
+    }
+    }, [colorSteps]);
 
   return (
     <>
