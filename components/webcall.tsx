@@ -49,11 +49,11 @@ import { Close } from "@radix-ui/react-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { PcConnectionIcon } from "./pc-connection-icon"
-import Image from "next/image"
 import { Textarea } from "@/components/ui/textarea"
+import { PcConnectionIcon } from "@/components/pc-connection-icon"
 import { SvgIcon } from "@/components/svgs"
-import { DrawMediaStream, DrawMediaStream2 } from "./canvases"
+import { DrawMediaStream } from "@/components/canvases"
+import Image from "next/image"
 
 
 export function BroadcasterPanel({ user }: { user: any }) {

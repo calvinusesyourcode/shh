@@ -113,12 +113,17 @@ const gradientSeeds = [
 export function BeautifulGradientCanvas({startColor, endColor, isVisible}: {startColor: string, endColor: string, isVisible: boolean}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
+  
+  // let a = Math.random() * 4 - 2;
+  // let b = Math.random() * 4 - 2;
+  // let c = Math.random() * 4 - 2;
+  // let d = Math.random() * 4 - 2;
   let [a, b, c, d] = gradientSeeds[Math.floor(Math.random() * gradientSeeds.length)]
+  a += (Math.random()/2) - 0.25
+  b += (Math.random()/2) - 0.25
+  c += (Math.random()/2) - 0.25
+  d += (Math.random()/2) - 0.25
 
-  a += Math.random() - 0.5
-  b += Math.random() - 0.5
-  c += Math.random() - 0.5
-  d += Math.random() - 0.5
 
   useEffect(() => {
     console.log(isVisible ? "VISIBLE" : "NOPE")
@@ -135,11 +140,6 @@ export function BeautifulGradientCanvas({startColor, endColor, isVisible}: {star
       context.imageSmoothingQuality = 'high';
       
       
-      // let a = 2
-      // let b = 1
-      // let c = 0
-      // let d = 3
-      
       const points: {x: number, y: number, vx: number, vy: number, c: string}[] = [];
       const colors = gradientSteps(startColor, endColor, height);
       if (colors) {
@@ -155,9 +155,6 @@ export function BeautifulGradientCanvas({startColor, endColor, isVisible}: {star
       }
 
       const render = () => {
-        if (context.globalAlpha != 0) {
-          // context.fillStyle = "rgba(0, 0, 0, 0.04)"
-          // context.fillRect(0, 0, width, height)
           for (let i = 0; i < points.length; i++) {
             const p = points[i];
             const value = getValue(p.x, p.y, a, b, c, d, width, height);
@@ -184,8 +181,7 @@ export function BeautifulGradientCanvas({startColor, endColor, isVisible}: {star
           }
 
           requestAnimationFrame(render);
-        }
-      };
+      }
 
       render();
 
@@ -328,64 +324,6 @@ export function BeautifulPianoCanvas({startColor, endColor, isVisible}: {startCo
 }
 
 export function DrawMediaStream({variable, varMax, svg1, svg2}: {variable: number, varMax: number, svg1: React.ReactNode, svg2: React.ReactNode}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const context = canvas?.getContext("2d");
-    if (canvas && context) {
-    const width = canvas.width
-    const height = canvas.height
-
-    context.globalAlpha = 1
-    context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = 'high';
-    context.strokeStyle = "#ffffff"
-    
-    const points: {x: number, y: number, vx: number, vy: number, s: number}[] = [];
-    for (let i = 0; i < 10; i++) {
-      points.push({
-        x: -(i*5),
-        y: 20,
-        vx: 0,
-        vy: 0,
-        s: 0
-      })
-    }
-
-    const render = () => {
-      // context.clearRect(0,0,width,height)
-      for (let i = 0; i < points.length; i++) {
-        const p = points[i]
-        // if (p.x <= 2) {p.s = variable}
-        context.lineWidth = p.s
-
-        context.beginPath();
-        context.moveTo(p.x, p.y);
-
-        p.x += 1
-        context.lineTo(p.x, p.y);
-        context.stroke()
-        if (p.x > width && Math.random() > 0.99) {p.x = 0; p.s = variable}
-        // p.vx *= 0.99;
-        // p.vy *= 0.99;
-
-      }
-
-      requestAnimationFrame(render);
-    }
-    render();
-    }
-  }, [variable])
-
-  return (
-    <>
-    <canvas ref={canvasRef} width="200" height="200"/>
-    </>
-  )
-}
-
-export function DrawMediaStream2({variable, varMax, svg1, svg2}: {variable: number, varMax: number, svg1: React.ReactNode, svg2: React.ReactNode}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioLevels = useRef<number[]>([]); // to store audio levels
 

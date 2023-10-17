@@ -14,7 +14,7 @@ export default function IndexPage() {
     <>
     <div className="flex flex-col min-h-screen">
       <Fancy
-        cousin={<SiteHeader home={true}/>}
+        cousin={<SiteHeader simple={false}/>}
         title="open-source peer-to-peer "
         typedText={["live music","live podcasts","livestreams"]}
         colors={["#3b82f6","#ec4899"]}
@@ -27,7 +27,7 @@ export default function IndexPage() {
         colors={["#eab308","#22c55e"]}
         subtitle='soothing sound waves but "shhhhh" quiet'
         description="using electromagnetic waves instead"
-        buttons={[["how it works","/how-it-works"]]}
+        buttons={[["how it works","/explained"]]}
         />
       <Fancy
         title="scientifically vibe-worthy"
@@ -41,7 +41,7 @@ export default function IndexPage() {
         colors={["#55ff55","#5555ff"]}
         subtitle="contributions welcome!"
         description={<p>built by and for the UBC community,<br/>star the project on github!</p>}
-        buttons={[["request a feature","/feedback"],["github","https://github.com/calvinusesyourcode/shh"]]}
+        buttons={[["request a feature","/feedback?feedbackType=featureRequest"],["github","https://github.com/calvinusesyourcode/shh"]]}
       />
     </div>
     </>
