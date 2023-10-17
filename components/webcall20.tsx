@@ -394,7 +394,7 @@ export function BroadcastHandler({ localStream, config, data }: { localStream: M
 export function BroadcastCall({ callsCollection, localStream, callId, data }: { callsCollection: CollectionReference, localStream: any, callId: string, data: any }) {
 
   const [dc, setDC] = useState<RTCDataChannel | null>(null)
-  const [status, setStatus] = useState(null)
+  const [status, setStatus] = useState<RTCPeerConnectionState | null>(null)
   // const [queue, setQueue] = useState<any>([])
   
   useEffect(() => {
@@ -436,6 +436,10 @@ export function BroadcastCall({ callsCollection, localStream, callId, data }: { 
         else {console.error("peerConnection was null")}
       })
       
+      pc.onconnectionstatechange = (event) => {
+        if (pc) {setStatus(pc.connectionState)}
+      }
+
       pc.ontrack = (e: any) => {
         e.streams[0].getTracks().forEach((track: any) => {
           if (remoteStream) {remoteStream.addTrack(track)}

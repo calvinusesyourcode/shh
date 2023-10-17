@@ -2,17 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { Icons } from '@/components/icons';
 import { buttonVariants } from './ui/button';
 
-type ConnectionState = 'connecting' | 'connected' | 'null';
-
-export function PcConnectionIcon({ state }: { state: ConnectionState}) {
+export function PcConnectionIcon({ state }: { state: RTCPeerConnectionState}) {
   const [currentSignalIcon, setCurrentSignalIcon] = useState('signal0');
   const [signalTimeout, setSignalTImeout] = useState<NodeJS.Timeout | null>(null);
   
   const signalIcons = ['signal0', 'signal1', 'signal2', 'signal3', 'signal4'];
-  const iconMapping: Record<ConnectionState, string> = {
+  const iconMapping: Record<RTCPeerConnectionState, string> = {
     'connecting': currentSignalIcon,
     'connected': 'cast',
-    'null': 'error'
+    'closed': 'error',
+    'disconnected': 'error',
+    'failed': 'error',
+    'new': 'cast',
     // Add more states here
   };
 
