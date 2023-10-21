@@ -3,6 +3,7 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useSearchParams } from 'next/navigation'
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -31,12 +32,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 export default function FeedbackCard() {
   const feedbackTypes = [
     "featureRequest", "bugReport", "comment"
   ]
+  const pathname: string = "x"
   const defaultTextPlaceholder = "// be descriptive!"
     const params = useSearchParams()
     const [a, sA] = useState<string | null>(null)
@@ -97,7 +99,12 @@ export default function FeedbackCard() {
             </div>
           </CardContent>
         </Card>
-
+        <div className='flex gap-2'>
+                {(pathname != '/land-clearing') && <Link className={buttonVariants()} href='/land-clearing?r=33' >Land Clearing & Excavation</Link>}
+                {(pathname != '/site-grading') && <Link className={buttonVariants()} href='/site-grading?r=33' >Site Grading</Link>}
+                {(pathname != '/brush-cutting') && <Link className={buttonVariants()} href='/brush-cutting?r=33' >Brush Cutting & Mulching</Link>}
+                {(pathname != '/drainage') && <Link className={buttonVariants()} href='/drainage?r=33' >Drainage Services</Link>}
+            </div>
         </>
     )
 }

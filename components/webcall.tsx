@@ -595,7 +595,7 @@ export function BroadcastInfo({ id }: { id: string }) {
             <p className="text-muted-foreground text-xs">{ago}</p>
           </div>
           <div className="flex gap-1">
-            {data?.type.toString().toLowerCase().includes("music") ? (<SvgIcon.MusicNote size="24px" />) : (<SvgIcon.Microphone size="24px" />)}
+            {data?.type?.toString().toLowerCase().includes("music") ? (<SvgIcon.MusicNote size="24px" />) : (<SvgIcon.Microphone size="24px" />)}
             <p className="text-muted-foreground text-sm">{data?.message}</p>
           </div>
         </div>
