@@ -22,7 +22,7 @@ const AudioPlayer: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    if (!speech) return
+    if (!speech) return;
     fetch('https://api.elevenlabs.io/v1/text-to-speech/C4hn9fnfYxYKktLkgAx2/stream', {
       method: 'POST',
       headers: {
