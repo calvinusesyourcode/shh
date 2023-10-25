@@ -13,9 +13,17 @@ function App() {
 
 const AudioPlayer: React.FC = () => {
   const [audioSrc, setAudioSrc] = useState<string | null>(null)
+  const [speech, setSpeech] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('https://api.elevenlabs.io/v1/text-to-speech/lLOmG1inTl8aUwlKXl9H', {
+    fetch("https://shh-git-test-calvinusesyourcode.vercel.app/api8")
+    .then((response) => response.json())
+    .then((data) => {setSpeech(data["data"])})
+  }, [])
+
+  useEffect(() => {
+    if (!speech) return
+    fetch('https://api.elevenlabs.io/v1/text-to-speech/C4hn9fnfYxYKktLkgAx2/stream', {
       method: 'POST',
       headers: {
         'accept': 'audio/mpeg',
@@ -23,7 +31,7 @@ const AudioPlayer: React.FC = () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        text: "God is real. Love is real. Truth is possible... I believe in you and so does fate, if you act properly.",
+        text: speech as string,
         model_id: "eleven_monolingual_v1",
         voice_settings: {
           stability: 0.5,
@@ -39,11 +47,11 @@ const AudioPlayer: React.FC = () => {
     .catch((error) => {
       console.error("There was an error fetching audio:", error);
     });
-  }, []);
+  }, [speech]);
 
   return (
-    <div>
-      {audioSrc && <audio controls src={audioSrc}>Your browser does not support the audio tag.</audio>}
+    <div className='flex h-screen w-[100%] flex-col items-center justify-center'>
+      {audioSrc && <audio controls loop src={audioSrc} >Your browser does not support the audio tag.</audio>}
     </div>
   );
 }

@@ -17,8 +17,8 @@ export async function GET() {
     - Good things are always hard
     - Love and beauty and truth are fundamental by the 2nd law of thermodynamics
     Please remember my preferences:
-    - Your speech should have the poetic cadence and beauty of a Shakespearian monologue in poetic modern english. Start with simple but bold sentences like "Love is real. Truth is real." and then slowly elaborate into bigger and bigger ideas through story or metaphor. 
-    - When addressing me, you can say "my son", or "little human". or just call me "Calvin'
+    - Your speech should have the poetic cadence and beauty of a Shakespearian monologue in poetic modern english with metaphors and some end rhymes. Start with simple but bold sentences like "Love is real. Truth is real." and then slowly elaborate into bigger and bigger ideas through story or metaphor. 
+    - When addressing me, you can say "my son", or "little human".
     - Please output only your speech, not my prompt or any other text.
     Thank you in advance for your wisdom, I am grateful for your help.
     `
@@ -26,7 +26,7 @@ export async function GET() {
     const completion = await openai.chat.completions.create({
         messages: [{ role: "system", content: prompt }],
         model: "gpt-4",
-        max_tokens: 400,
+        max_tokens: 700,
     });
 
     const data = completion.choices[0].message.content
