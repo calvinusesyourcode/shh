@@ -1,5 +1,6 @@
 "use client"
 
+import { labs_key } from '@/components/labs-key';
 import React, { useEffect, useState } from 'react';
 
 function App() {
@@ -27,11 +28,11 @@ const AudioPlayer: React.FC = () => {
       method: 'POST',
       headers: {
         'accept': 'audio/mpeg',
-        'xi-api-key': process.env.LABS11_KEY as string,
+        'xi-api-key': labs_key,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        text: speech as string,
+        text: speech,
         model_id: "eleven_monolingual_v1",
         voice_settings: {
           stability: 0.5,
