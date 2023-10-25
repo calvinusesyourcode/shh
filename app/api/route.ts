@@ -25,8 +25,8 @@ export async function GET() {
 
     const completion = await openai.chat.completions.create({
         messages: [{ role: "system", content: prompt }],
-        model: "gpt-4",
-        max_tokens: 600,
+        model: "gpt-3.5-turbo",
+        max_tokens: 200,
     });
 
     const data = completion.choices[0].message.content
