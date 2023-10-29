@@ -9,10 +9,14 @@ import {
   SignalHigh,
   Signal,
   Cast,
-  type Icon as LucideIcon,
+  Circle,
+  Square,
+  Plus,
+  SendHorizonal,
+  Redo,
+  IterationCcw,
+  IterationCw,
 } from "lucide-react"
-
-export type Icon = LucideIcon
 
 export const Icons = {
   sun: SunMedium,
@@ -25,6 +29,11 @@ export const Icons = {
   signal4: Signal,
   cast: Cast,
   error: Moon,
+  circle: Circle,
+  square: Square,
+  plus: Plus,
+  paper_airplane: SendHorizonal,
+  redo: IterationCw,
   logo: (props: LucideProps) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {...props}>
       <path
